@@ -1,6 +1,7 @@
 <?php
 // CONFIG
-$mysqli = new mysqli("localhost", "sam", "123", "lebonresto");
+include_once __DIR__ . '/connect.php';
+$mysqli = new mysqli($mysqliHost, $mysqliUser, $mysqliPass, $mysqliDb);
 if ($mysqli->connect_error) die("Erreur DB : " . $mysqli->connect_error);
 
 $folder = __DIR__ . "/assets/images/vendeur/"; // chemin absolu

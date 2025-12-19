@@ -9,8 +9,8 @@ class Database {
 
     function __construct() {
         $this->host = getenv('DB_HOST') ?: 'localhost';
-        $this->username = getenv('DB_USER') ?: 'sam';
-        $this->password = getenv('DB_PASS') ?: '123';
+        $this->username = getenv('DB_USER') ?: '';
+        $this->password = getenv('DB_PASS') ?: '';
         $this->db = getenv('DB_NAME') ?: 'lebonresto';
     }
 

@@ -2,11 +2,9 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
-// Configuration BDD
-$servername = 'localhost';
-$username = 'sam';
-$password = '123';
-$db = 'lebonresto';
+// Use central connection
+include_once __DIR__ . '/connect.php';
+// $conn and $dbh are available
 
 // Récupérer les paramètres
 $action = $_GET['action'] ?? 'search';
@@ -31,9 +29,8 @@ $geoc = [
     'lon' => trim($gpsArray[1])
 ];
 
-// Connexion BDD
-$conn = new mysqli($servername, $username, $password, $db);
-if ($conn->connect_error) {
+// $conn provided by connect.php
+if (!isset($conn) || $conn->connect_error) {
     echo json_encode(['error' => 'Erreur de connexion BDD']);
     exit;
 }

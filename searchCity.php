@@ -6,14 +6,11 @@
 
 header('Content-Type: application/json; charset=utf-8');
 
-$servername = 'localhost';
-$username = 'sam';
-$password = '123';
-$db = 'lebonresto';
+include_once __DIR__ . '/connect.php';
+// $conn is provided by connect.php
 
-$conn = new mysqli($servername, $username, $password, $db);
-
-if ($conn->connect_error) {
+// $conn provided by connect.php
+if (!isset($conn) || $conn->connect_error) {
     http_response_code(500);
     echo json_encode(['error' => 'Erreur de connexion']);
     exit;

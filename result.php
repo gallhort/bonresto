@@ -6,10 +6,8 @@
 
 session_start();
   // ===== CONFIGURATION BDD =====
-$servername = 'localhost';
-$username = 'sam';
-$password = '123';
-$db = 'lebonresto';
+include_once __DIR__ . '/connect.php';
+// $conn and $dbh provided by connect.php
 
 // ===== PAGINATION =====
 if (isset($_GET['pg']) && !empty($_GET['pg'])) {
@@ -80,12 +78,11 @@ $geoc = [
 $radius = max(0, min(200, (float)$radius));
 
 // ===== CONNEXION BDD =====
-$conn = new mysqli($servername, $username, $password, $db);
-mysqli_set_charset($conn, "utf8mb4");
-
-if ($conn->connect_error) {
-    die('Erreur de connexion : ' . $conn->connect_error);
+// $conn provided by connect.php
+if (!isset($conn) || $conn->connect_error) {
+    die('Erreur de connexion BDD.');
 }
+mysqli_set_charset($conn, "utf8mb4");
 
 // ===== FORMULE DE DISTANCE =====
 $distanceFormula = "(((acos(sin((" . $geoc['lat'] . "*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((" . $geoc['lat'] . "*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((" . $geoc['lon'] . "- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344)";

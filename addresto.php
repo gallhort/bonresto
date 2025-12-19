@@ -43,7 +43,11 @@ $photoslide3="";
 
 
 
-$pdo = new PDO('mysql:host=localhost;dbname=lebonresto', "sam", "123");
+include_once __DIR__ . '/connect.php';
+if (!isset($dbh) || !$dbh) {
+    die('Erreur BDD');
+}
+$pdo = $dbh; // compatibilité
 
 
 
