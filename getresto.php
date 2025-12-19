@@ -2,10 +2,8 @@
 
         <?php
 
-$servername = 'localhost';
-$username = 'sam';
-$password = '123';
-$db='appsam';
+include_once __DIR__ . '/connect.php';
+$db = getenv('DB_NAME') ?: 'appsam';
 $nom = trim($_POST['nom'] ?? '');
 if ($nom === '') {
     // Pas de nom fourni → renvoyer un tableau vide
@@ -13,36 +11,16 @@ if ($nom === '') {
     exit;
 }
 
-//On établit la connexion
-$conn = new mysqli($servername, $username, $password, $db);
-
-//On vérifie la connexion
-if ($conn->connect_error) {
+// Use DatabasePDO wrapper instead of raw mysqli
+require_once __DIR__ . '/classes/DatabasePDO.php';
+try {
+    $dbw = new DatabasePDO();
+    $rows = $dbw->fetchAll("SELECT gps, nom, type, adresse, codePostal, descriptif, ville FROM vendeur WHERE nom = ?", [$nom]);
+    echo json_encode($rows);
+} catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erreur de connexion']);
-    exit;
+    echo json_encode(['error' => 'Erreur interne BDD']);
 }
-$conn->set_charset('utf8mb4');
-
-// Requête préparée pour éviter l'injection SQL
-$stmt = $conn->prepare("SELECT gps, nom, type, adresse, codePostal, descriptif, ville FROM vendeur WHERE nom = ?");
-$stmt->bind_param('s', $nom);
-$stmt->execute();
-$resultSet = $stmt->get_result();
-$result = [];
-while ($ligne = $resultSet->fetch_assoc()) {
-    $result[] = [
-        'gps' => $ligne['gps'],
-        'nom' => $ligne['nom'],
-        'type' => $ligne['type'],
-        'adresse' => $ligne['adresse'],
-        'codePostal' => $ligne['codePostal'],
-        'descriptif' => $ligne['descriptif'],
-        'ville' => $ligne['ville']
-    ];
-}
-
-echo json_encode($result);
 
 ?>
 

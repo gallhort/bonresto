@@ -29,6 +29,8 @@ sessions/
 .env.*.local
 *.local.php
 settings.json
+# Exemple de fichier d'exemple (non sensible)
+.env.example
 
 # ========================
 # Dépendances PHP / Composer
