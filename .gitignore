@@ -14,9 +14,12 @@ ehthumbs.db
 *.swp
 *~
 
+# Cache, sessions, fichiers temporaires PHP
 cache/
 tmp/
 sessions/
+*.cache
+*.session
 
 # ========================
 # Environnements et configurations locales
@@ -25,6 +28,7 @@ sessions/
 .env.local
 .env.*.local
 *.local.php
+settings.json
 
 # ========================
 # Dépendances PHP / Composer
@@ -35,15 +39,19 @@ vendor/
 # Modules frontend (npm/yarn)
 # ========================
 node_modules/
+dist/
+build/
+*.map
 
 # ========================
 # Configuration IDE
 # ========================
 .vscode/
+.idea/
 
 # ========================
-# Fichiers générés / build
+# Fichiers générés par Claude Code ou outils d’auto-format
 # ========================
-dist/
-build/
-*.map
+*.php.tmp
+*.php.bak
+*.refactor
