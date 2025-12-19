@@ -84,26 +84,41 @@ if (!isset($conn) || $conn->connect_error) {
 }
 mysqli_set_charset($conn, "utf8mb4");
 
+// Initialize PDO wrapper for parameterized queries
+require_once __DIR__ . '/classes/DatabasePDO.php';
+try {
+    $dbw = new DatabasePDO();
+} catch (Exception $e) {
+    error_log('result.php: DB init failed: ' . $e->getMessage());
+    die('Erreur interne BDD.');
+}
+
 // ===== FORMULE DE DISTANCE =====
 $distanceFormula = "(((acos(sin((" . $geoc['lat'] . "*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((" . $geoc['lat'] . "*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((" . $geoc['lon'] . "- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344)";
 // ===== CLAUSE PRIX POUR SQL =====
 $priceClause = "";
+$priceFilter_sql = null;
 if ($priceFilter !== 'all') {
     // Convertir € en $ pour matcher la base de données
     $priceFilter_sql = str_replace('€', '$', $priceFilter);
-    $priceFilter_escaped = mysqli_real_escape_string($conn, $priceFilter_sql);
-    $priceClause = " AND v.pricerange = '{$priceFilter_escaped}'";
+    $priceClause = " AND v.pricerange = :price";
 }
 
 
 
 // ===== REQUÊTE COUNT =====
-if ($type == 'Tous') {
-$req = "SELECT COUNT(*) AS nbre FROM vendeur v 
-        LEFT JOIN options o ON v.Nom = o.Nom 
-        WHERE {$distanceFormula} <= " . $radius . $priceClause;
+$params = ['radius' => $radius];
+$priceParamNeeded = ($priceFilter_sql !== null);
+if ($priceParamNeeded) {
+    $params['price'] = $priceFilter_sql;
+}
 
-if (isset($options)) {
+if ($type == 'Tous') {
+    $req = "SELECT COUNT(*) AS nbre FROM vendeur v 
+            LEFT JOIN options o ON v.Nom = o.Nom 
+            WHERE {$distanceFormula} <= :radius" . ($priceParamNeeded ? " AND v.pricerange = :price" : "");
+    
+    if (isset($options)) {
         foreach ($options as $val) {
             if (preg_match('/^[A-Za-z0-9_]+$/', $val)) {
                 $req .= " AND o.`" . $val . "` = '1'";
@@ -111,12 +126,12 @@ if (isset($options)) {
         }
     }
 } else {
-    $type_escaped = mysqli_real_escape_string($conn, $type);
-$req = "SELECT COUNT(*) AS nbre FROM vendeur v 
-        JOIN options o ON v.Nom = o.Nom 
-        WHERE {$distanceFormula} <= " . $radius . " 
-        AND v.Type = '{$type_escaped}'" . $priceClause;
-            
+    $req = "SELECT COUNT(*) AS nbre FROM vendeur v 
+            JOIN options o ON v.Nom = o.Nom 
+            WHERE {$distanceFormula} <= :radius 
+            AND v.Type = :type" . ($priceParamNeeded ? " AND v.pricerange = :price" : "");
+    $params['type'] = $type;
+    
     if (isset($options)) {
         foreach ($options as $val) {
             if (preg_match('/^[A-Za-z0-9_]+$/', $val)) {
@@ -126,13 +141,8 @@ $req = "SELECT COUNT(*) AS nbre FROM vendeur v
     }
 }
 
-$res = mysqli_query($conn, $req);
-if (!$res) {
-    die("Erreur SQL lors du comptage des restaurants");
-}
-
-$row = mysqli_fetch_assoc($res);
-$nbresto = $row['nbre'];
+$row = $dbw->fetch($req, $params);
+$nbresto = $row ? (int)$row['nbre'] : 0;
 
 ?>
 <script>
@@ -290,36 +300,44 @@ console.log('📦 Paramètres chargés:', window.searchParams);
         <?php
         $start = ($pg - 1) * $nb;
         
-        // REQUÊTE PRINCIPALE
+        // REQUÊTE PRINCIPALE (paramétrée via PDO)
+        $params = ['radius' => $radius];
+        if ($priceFilter_sql !== null) {
+            $params['price'] = $priceFilter_sql;
+        }
+
         if ($type == 'Tous') {
-$requete = "SELECT 
-    {$distanceFormula} AS distance,
-    v.gps, v.note, v.nom, v.type, v.adresse, v.codePostal, 
-    v.descriptif, v.ville, v.pricerange, p.main
-    FROM vendeur v
-    LEFT JOIN photos p ON v.Nom = p.Nom
-    LEFT JOIN options o ON v.Nom = o.Nom
-    WHERE {$distanceFormula} <= " . $radius . $priceClause;
-        } else {
-            $type_escaped = mysqli_real_escape_string($conn, $type);
             $requete = "SELECT 
-    {$distanceFormula} AS distance,
-    v.gps, v.note, v.nom, v.type, v.adresse, v.codePostal, 
-    v.descriptif, v.ville, v.pricerange, p.main
-    FROM vendeur v
-    LEFT JOIN photos p ON v.Nom = p.Nom
-    LEFT JOIN options o ON v.Nom = o.Nom
-    WHERE {$distanceFormula} <= " . $radius . " 
-    AND v.Type = '{$type_escaped}'" . $priceClause;
+                {$distanceFormula} AS distance,
+                v.gps, v.note, v.nom, v.type, v.adresse, v.codePostal, 
+                v.descriptif, v.ville, v.pricerange, p.main
+                FROM vendeur v
+                LEFT JOIN photos p ON v.Nom = p.Nom
+                LEFT JOIN options o ON v.Nom = o.Nom
+                WHERE {$distanceFormula} <= :radius" . ($priceFilter_sql !== null ? " AND v.pricerange = :price" : "");
+        } else {
+            $requete = "SELECT 
+                {$distanceFormula} AS distance,
+                v.gps, v.note, v.nom, v.type, v.adresse, v.codePostal, 
+                v.descriptif, v.ville, v.pricerange, p.main
+                FROM vendeur v
+                LEFT JOIN photos p ON v.Nom = p.Nom
+                LEFT JOIN options o ON v.Nom = o.Nom
+                WHERE {$distanceFormula} <= :radius 
+                AND v.Type = :type" . ($priceFilter_sql !== null ? " AND v.pricerange = :price" : "");
+            $params['type'] = $type;
         }
 
         if (isset($options)) {
             foreach ($options as $val) {
-                $val = mysqli_real_escape_string($conn, $val);
-                $requete .= " AND o.{$val} = '1'";
+                if (preg_match('/^[A-Za-z0-9_]+$/', $val)) {
+                    $requete .= " AND o.`" . $val . "` = '1'";
+                }
             }
         }
 
+        // Pagination (limite et offset sont des entiers sécurisés)
+        $start = (int)$start; $nb = (int)$nb;
         switch ($tri) {
             case 1: $requete .= " ORDER BY v.nom ASC LIMIT {$start}, {$nb}"; break;
             case 2: $requete .= " ORDER BY distance ASC LIMIT {$start}, {$nb}"; break;
@@ -327,46 +345,39 @@ $requete = "SELECT
             default: $requete .= " LIMIT {$start}, {$nb}"; break;
         }
 
-        $resultat = mysqli_query($conn, $requete);
+        // Exécution paginée
+        $rows = $dbw->fetchAll($requete, $params);
 
-    $resultat = mysqli_query($conn, $requete);
+        // Récupérer TOUS les restaurants pour la carte (sans pagination)
+        $requete_all = preg_replace('/\s+LIMIT\s+\d+\s*,\s*\d+\s*$/i', '', $requete);
+        $rows_all = $dbw->fetchAll($requete_all, $params);
+        $all_restaurants_data = $rows_all ?: [];
 
-// AJOUTEZ CES LIGNES ICI :
-// Récupérer TOUS les restaurants pour la carte (sans pagination)
-$requete_all = str_replace("LIMIT {$start}, {$nb}", "", $requete);
-$resultat_all = mysqli_query($conn, $requete_all);
-$all_restaurants_data = [];
-if ($resultat_all) {
-    while ($ligne_all = $resultat_all->fetch_assoc()) {
-        $all_restaurants_data[] = $ligne_all;
-    }
-}
- // FIN AJOUT
+if (empty($rows)) {
+    echo "<p style='color:gray; text-align:center;'>Aucun restaurant trouvé</p>";
+} else {
+    $compteur = 1;
+    $allRestaurants = []; // Pour stocker toutes les données
 
-if (!$resultat) {
-    echo "<p style='color:red; text-align:center;'>Erreur lors de la récupération des restaurants</p>";
-        } else {
-            $compteur = 1;
-            $allRestaurants = []; // Pour stocker toutes les données
-            
-            while ($ligne = $resultat->fetch_assoc()) {
-                $allRestaurants[] = $ligne; // Stocker pour le modal
-                
-                $pics = !empty($ligne['main']) 
-                    ? $ligne['main'] 
-                    : 'assets/images/vendeur/' . $compteur . '.jpg';
-                
-                $restoId = 'resto-' . preg_replace('/[^a-zA-Z0-9]/', '-', $ligne['nom']);
-                $urlDetail = 'detail-restaurant-2.php?nom=' . urlencode($ligne['nom']);
-                
-// Convertir $ en € pour l'affichage
-$priceRange = !empty($ligne['pricerange']) && $ligne['pricerange'] !== 'null' 
-    ? str_replace('$', '€', $ligne['pricerange']) 
-    : '€€';                $note = !empty($ligne['note']) ? number_format($ligne['note'], 1) : 'N/A';
-                $distance = round($ligne['distance'], 1);
-                
-                $compteur++;
-                if ($compteur > 20) { $compteur = 1; }
+    foreach ($rows as $ligne) {
+        $allRestaurants[] = $ligne; // Stocker pour le modal
+
+        $pics = !empty($ligne['main']) 
+            ? $ligne['main'] 
+            : 'assets/images/vendeur/' . $compteur . '.jpg';
+
+        $restoId = 'resto-' . preg_replace('/[^a-zA-Z0-9]/', '-', $ligne['nom']);
+        $urlDetail = 'detail-restaurant-2.php?nom=' . urlencode($ligne['nom']);
+
+        // Convertir $ en € pour l'affichage
+        $priceRange = !empty($ligne['pricerange']) && $ligne['pricerange'] !== 'null' 
+            ? str_replace('$', '€', $ligne['pricerange']) 
+            : '€€';
+        $note = !empty($ligne['note']) ? number_format($ligne['note'], 1) : 'N/A';
+        $distance = round($ligne['distance'], 1);
+
+        $compteur++;
+        if ($compteur > 20) { $compteur = 1; }
         ?>
                 <div class="restaurant-card" 
                      id="<?php echo $restoId; ?>" 
