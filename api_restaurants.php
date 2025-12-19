@@ -29,13 +29,15 @@ $geoc = [
     'lon' => trim($gpsArray[1])
 ];
 
-// $conn provided by connect.php
-if (!isset($conn) || $conn->connect_error) {
-    echo json_encode(['error' => 'Erreur de connexion BDD']);
+// Initialize PDO wrapper and validate DB connection
+require_once __DIR__ . '/classes/DatabasePDO.php';
+try {
+    $dbw = new DatabasePDO();
+} catch (Exception $e) {
+    error_log('api_restaurants: DB init failed: ' . $e->getMessage());
+    echo json_encode(['error' => 'Erreur interne BDD']);
     exit;
 }
-
-$conn->set_charset("utf8mb4");
 
 // FORMULE DE DISTANCE (Haversine corrigée - retourne les km)
 $lat1 = (float)$geoc['lat'];
@@ -46,8 +48,7 @@ $distanceFormula = "( 6371 * acos( cos( radians(" . $lat1 . ") ) * cos( radians(
 
 // ============ FONCTIONS ============
 
-function getRestaurants($conn, $distanceFormula, $type, $radius, $tri, $offset, $limit) {
-    // Requête principale
+function getRestaurants($dbw, $distanceFormula, $type, $radius, $tri, $offset, $limit) {
     $query = "SELECT 
         {$distanceFormula} AS distance,
         v.gps, v.note, v.Nom, v.Type, v.adresse, v.codePostal, 
@@ -55,13 +56,15 @@ function getRestaurants($conn, $distanceFormula, $type, $radius, $tri, $offset, 
         COALESCE(p.main, 'default.jpg') as photo
         FROM vendeur v
         LEFT JOIN photos p ON v.Nom = p.Nom
-        WHERE {$distanceFormula} <= {$radius}";
-    
+        WHERE {$distanceFormula} <= :radius";
+
+    $params = ['radius' => $radius];
+
     if ($type != 'Tous') {
-        $type_esc = $conn->real_escape_string($type);
-        $query .= " AND v.Type = '{$type_esc}'";
+        $query .= " AND v.Type = :type";
+        $params['type'] = $type;
     }
-    
+
     // Tri
     switch ($tri) {
         case 2:
@@ -76,74 +79,69 @@ function getRestaurants($conn, $distanceFormula, $type, $radius, $tri, $offset, 
         default:
             $query .= " ORDER BY v.note DESC";
     }
-    
+
+    $offset = (int)$offset;
+    $limit = (int)$limit;
     $query .= " LIMIT {$offset}, {$limit}";
-    
-    $result = $conn->query($query);
+
+    $rows = $dbw->fetchAll($query, $params);
     $restaurants = [];
-    
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $image = !empty($row['photo']) && $row['photo'] != 'default.jpg' 
-                ? 'images/vendeur/' . $row['photo'] 
-                : 'assets/images/default.jpg';
-            
-            $restaurants[] = [
-                'id' => uniqid(),
-                'name' => $row['Nom'],
-                'type' => $row['Type'],
-                'rating' => (float)$row['note'],
-                'reviews' => rand(50, 300),
-                'description' => substr($row['descriptif'] ?? 'Cuisine de qualité', 0, 80),
-                'price' => rand(15, 50),
-                'distance' => round((float)$row['distance'], 1),
-                'gps' => $row['gps'],
-                'address' => $row['adresse'] . ', ' . $row['codePostal'] . ' ' . $row['ville'],
-                'image' => $image
-            ];
-        }
+
+    foreach ($rows as $row) {
+        $image = !empty($row['photo']) && $row['photo'] != 'default.jpg' 
+            ? 'images/vendeur/' . $row['photo'] 
+            : 'assets/images/default.jpg';
+
+        $restaurants[] = [
+            'id' => uniqid(),
+            'name' => $row['Nom'],
+            'type' => $row['Type'],
+            'rating' => (float)$row['note'],
+            'reviews' => rand(50, 300),
+            'description' => substr($row['descriptif'] ?? 'Cuisine de qualité', 0, 80),
+            'price' => rand(15, 50),
+            'distance' => round((float)$row['distance'], 1),
+            'gps' => $row['gps'],
+            'address' => $row['adresse'] . ', ' . $row['codePostal'] . ' ' . $row['ville'],
+            'image' => $image
+        ];
     }
-    
+
     return $restaurants;
 }
 
-function countRestaurants($conn, $distanceFormula, $type, $radius) {
+function countRestaurants($dbw, $distanceFormula, $type, $radius) {
     $query = "SELECT COUNT(DISTINCT v.Nom) as count FROM vendeur v 
-              WHERE {$distanceFormula} <= {$radius}";
-    
+              WHERE {$distanceFormula} <= :radius";
+    $params = ['radius' => $radius];
+
     if ($type != 'Tous') {
-        $type_esc = $conn->real_escape_string($type);
-        $query .= " AND v.Type = '{$type_esc}'";
+        $query .= " AND v.Type = :type";
+        $params['type'] = $type;
     }
-    
-    $result = $conn->query($query);
-    if ($result) {
-        $row = $result->fetch_assoc();
-        return (int)$row['count'];
-    }
-    return 0;
+
+    $row = $dbw->fetch($query, $params);
+    return $row ? (int)$row['count'] : 0;
 }
 
-function getCategories($conn) {
+function getCategories($dbw) {
     $query = "SELECT DISTINCT Type, COUNT(Type) as count FROM vendeur 
               WHERE Type IS NOT NULL AND Type != '' 
               GROUP BY Type ORDER BY count DESC";
-    $result = $conn->query($query);
+    $rows = $dbw->fetchAll($query);
     $categories = [];
-    
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $categories[] = [
-                'name' => $row['Type'],
-                'count' => (int)$row['count']
-            ];
-        }
+
+    foreach ($rows as $row) {
+        $categories[] = [
+            'name' => $row['Type'],
+            'count' => (int)$row['count']
+        ];
     }
-    
+
     return $categories;
 }
 
-function getRatings($conn) {
+function getRatings($dbw) {
     $ratings = [
         ['label' => '4.5 - 5.0 ⭐', 'min' => 4.5, 'max' => 5.0],
         ['label' => '4.0 - 4.5 ⭐', 'min' => 4.0, 'max' => 4.5],
@@ -153,46 +151,35 @@ function getRatings($conn) {
     
     foreach ($ratings as &$rating) {
         $query = "SELECT COUNT(*) as count FROM vendeur 
-                  WHERE note >= " . $rating['min'] . " AND note < " . $rating['max'];
-        $result = $conn->query($query);
-        if ($result) {
-            $row = $result->fetch_assoc();
-            $rating['count'] = (int)$row['count'];
-        } else {
-            $rating['count'] = 0;
-        }
+                  WHERE note >= :min AND note < :max";
+        $row = $dbw->fetch($query, ['min' => $rating['min'], 'max' => $rating['max']]);
+        $rating['count'] = $row ? (int)$row['count'] : 0;
     }
     
     return $ratings;
 }
 
-function getOptions($conn) {
+function getOptions($dbw) {
     $query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
-              WHERE TABLE_SCHEMA = 'lebonresto' 
+              WHERE TABLE_SCHEMA = DATABASE() 
               AND TABLE_NAME = 'options' 
               AND COLUMN_NAME NOT IN ('id', 'Nom')
               LIMIT 10";
     
-    $result = $conn->query($query);
+    $rows = $dbw->fetchAll($query);
     $options = [];
     
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $colName = $row['COLUMN_NAME'];
-            // Compter combien de vendeurs ont cette option activée
-            $countQuery = "SELECT COUNT(DISTINCT Nom) as count FROM options WHERE `{$colName}` = '1'";
-            $countResult = $conn->query($countQuery);
-            $count = 0;
-            if ($countResult) {
-                $countRow = $countResult->fetch_assoc();
-                $count = (int)$countRow['count'];
-            }
-            
-            $options[] = [
-                'name' => $colName,
-                'count' => $count
-            ];
-        }
+    foreach ($rows as $row) {
+        $colName = $row['COLUMN_NAME'];
+        // Compter combien de vendeurs ont cette option activée
+        $countQuery = "SELECT COUNT(DISTINCT Nom) as count FROM options WHERE `" . $colName . "` = '1'";
+        $countRow = $dbw->fetch($countQuery);
+        $count = $countRow ? (int)$countRow['count'] : 0;
+
+        $options[] = [
+            'name' => $colName,
+            'count' => $count
+        ];
     }
     
     return $options;
@@ -201,12 +188,12 @@ function getOptions($conn) {
 // ============ ACTION SEARCH ============
 
 if ($action === 'search') {
-    $total = countRestaurants($conn, $distanceFormula, $type, $radius);
-    $restaurants = getRestaurants($conn, $distanceFormula, $type, $radius, $tri, $offset, $limit);
-    $categories = getCategories($conn);
-    $ratings = getRatings($conn);
-    $options = getOptions($conn);
-    
+    $total = countRestaurants($dbw, $distanceFormula, $type, $radius);
+    $restaurants = getRestaurants($dbw, $distanceFormula, $type, $radius, $tri, $offset, $limit);
+    $categories = getCategories($dbw);
+    $ratings = getRatings($dbw);
+    $options = getOptions($dbw);
+
     echo json_encode([
         'success' => true,
         'restaurants' => $restaurants,
@@ -221,5 +208,8 @@ if ($action === 'search') {
     ], JSON_UNESCAPED_UNICODE);
 }
 
-$conn->close();
+// Close legacy mysqli connection if present
+if (isset($conn) && $conn instanceof mysqli) {
+    $conn->close();
+}
 ?>

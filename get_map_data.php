@@ -2,11 +2,14 @@
 header('Content-Type: application/json');
 
 include_once __DIR__ . '/connect.php';
-// $conn provided by connect.php
+require_once __DIR__ . '/classes/DatabasePDO.php';
 
-// $conn provided by connect.php
-if (!isset($conn) || $conn->connect_error) {
-    echo json_encode(['success' => false, 'error' => 'Connexion échouée']);
+// Initialiser le wrapper PDO (en mode fail-safe)
+try {
+    $dbw = new DatabasePDO();
+} catch (Exception $e) {
+    error_log('get_map_data: DB init failed: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'Erreur interne BDD']);
     exit;
 }
 
@@ -72,29 +75,25 @@ if (!empty($options) && is_array($options)) {
     }
 }
 
-$requete .= " ORDER BY distance ASC LIMIT {$start}, {$nb}";
+$sql = $requete . " ORDER BY distance ASC LIMIT {$start}, {$nb}";
 
-// Exécuter la requête
-$resultat = mysqli_query($conn, $requete);
+try {
+    $rows = $dbw->fetchAll($sql, $params ?? []);
+    $restaurants = [];
+    foreach ($rows as $ligne) {
+        $restaurants[] = [
+            'nom' => $ligne['nom'],
+            'type' => $ligne['type'],
+            'adresse' => $ligne['adresse'],
+            'ville' => $ligne['ville'],
+            'gps' => $ligne['gps'],
+            'distance' => round($ligne['distance'], 2)
+        ];
+    }
 
-if (!$resultat) {
-    echo json_encode(['success' => false, 'error' => mysqli_error($conn)]);
-    exit;
+    echo json_encode(['success' => true, 'restaurants' => $restaurants]);
+} catch (Exception $e) {
+    error_log('get_map_data exception: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'Erreur interne BDD']);
 }
-
-$restaurants = [];
-while ($ligne = mysqli_fetch_assoc($resultat)) {
-    $restaurants[] = [
-        'nom' => $ligne['nom'],
-        'type' => $ligne['type'],
-        'adresse' => $ligne['adresse'],
-        'ville' => $ligne['ville'],
-        'gps' => $ligne['gps'],
-        'distance' => round($ligne['distance'], 2)
-    ];
-}
-
-mysqli_close($conn);
-
-echo json_encode(['success' => true, 'restaurants' => $restaurants]);
 ?>
