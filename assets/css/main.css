@@ -1,0 +1,2075 @@
+ 
+/* ============================================
+   DESIGN TRIPADVISOR MODERNE - STYLE COMPLET
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #00aa6c;
+    --primary-hover: #008c59;
+    --secondary-color: #ff5a5f;
+    --text-dark: #1a1a1a;
+    --text-gray: #666;
+    --border-color: #e0e0e0;
+    --bg-light: #fafafa;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ===== HEADER STICKY ===== */
+.search-header {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 0;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.search-header.scrolled {
+    padding: 12px 0;
+    box-shadow: var(--shadow-md);
+}
+
+.search-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.search-info h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.search-meta {
+    font-size: 15px;
+    color: var(--text-gray);
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.search-meta i {
+    color: var(--primary-color);
+}
+
+.search-meta strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn-icon {
+    background: white;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.btn-icon:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-icon i {
+    font-size: 18px;
+}
+
+.btn-primary-custom {
+    background: var(--primary-color);
+    color: white;
+    border: 2px solid var(--primary-color);
+}
+
+.btn-primary-custom:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+/* ===== VIEW TOGGLE (LISTE/GRILLE) ===== */
+.view-toggle {
+    display: flex;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.view-toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 10px 16px;
+    cursor: pointer;
+    color: var(--text-gray);
+    transition: var(--transition);
+    font-size: 18px;
+}
+
+.view-toggle-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.view-toggle-btn:hover:not(.active) {
+    background: var(--bg-light);
+}
+
+/* ===== FILTERS BAR ===== */
+.filters-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    gap: 15px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 30px;
+}
+
+.filters-left {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    background: white;
+    border: 1.5px solid var(--border-color);
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--text-dark);
+}
+
+.filter-chip:hover {
+    border-color: var(--primary-color);
+    background: #f0fdf7;
+    transform: translateY(-1px);
+}
+
+.filter-chip.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,170,108,0.3);
+}
+
+.sort-dropdown {
+    position: relative;
+}
+
+.sort-dropdown select {
+    padding: 10px 40px 10px 20px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    background: white;
+    color: var(--text-dark);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: var(--transition);
+}
+
+.sort-dropdown select:hover {
+    border-color: var(--primary-color);
+}
+
+/* ===== LAYOUT CONTAINER ===== */
+.results-container {
+    padding: 0;
+    background: white;
+}
+
+.restaurants-section {
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ===== RESTAURANT CARD - MODE LISTE ===== */
+.restaurants-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.restaurants-grid.list-view {
+    grid-template-columns: 1fr;
+}
+
+.restaurants-grid.grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+}
+
+.restaurant-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+}
+
+.restaurant-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+    border-color: var(--primary-color);
+}
+
+.restaurant-card.highlight {
+    animation: highlightPulse 2s ease-in-out;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 30px rgba(0,170,108,0.4);
+}
+
+@keyframes highlightPulse {
+    0%, 100% { 
+        box-shadow: 0 0 30px rgba(0,170,108,0.2);
+    }
+    50% { 
+        box-shadow: 0 0 50px rgba(0,170,108,0.6);
+    }
+}
+
+/* Mode Liste */
+.list-view .restaurant-card .card-content {
+    display: flex;
+    gap: 25px;
+    padding: 20px;
+}
+
+.list-view .card-image {
+    flex: 0 0 280px;
+    height: 200px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Mode Grille */
+.grid-view .restaurant-card .card-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.grid-view .card-image {
+    width: 100%;
+    height: 220px;
+    position: relative;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.restaurant-card:hover .card-image img {
+    transform: scale(1.1);
+}
+
+/* Badge sur l'image */
+.image-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 2;
+}
+
+/* ===== CARD INFO ===== */
+.card-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.grid-view .card-info {
+    padding: 20px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.restaurant-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.3px;
+}
+
+.grid-view .restaurant-name {
+    font-size: 19px;
+}
+
+.restaurant-type {
+    font-size: 14px;
+    color: var(--text-gray);
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.restaurant-type i {
+    color: var(--primary-color);
+}
+
+.rating-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, var(--primary-color), #00d084);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: 0 4px 12px rgba(0,170,108,0.3);
+    white-space: nowrap;
+}
+
+.rating-badge i {
+    color: #ffd700;
+    font-size: 14px;
+}
+
+.card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-gray);
+    line-height: 1.5;
+}
+
+.detail-item i {
+    color: var(--primary-color);
+    width: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+    gap: 15px;
+}
+
+.price-range {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    letter-spacing: 2px;
+}
+
+.view-on-map-btn {
+    background: transparent;
+    border: 1.5px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.view-on-map-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,170,108,0.3);
+}
+
+/* ===== MODAL CARTE (STYLE TRIPADVISOR) ===== */
+.map-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.map-modal.active {
+    display: block;
+}
+
+.map-modal-content {
+    width: 95%;
+    height: 90%;
+    margin: auto;
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    display: flex;
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Modal Content Container */
+.map-modal-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+/* Header du Modal */
+.modal-map-header {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+.modal-resto-map-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: white;
+    border: 1.5px solid #00aa6c;
+    color: #00aa6c;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 2;
+}
+
+.modal-resto-map-btn:hover {
+    background: #00aa6c;
+    color: white;
+}
+
+.modal-resto-item {
+    position: relative;
+}
+
+.modal-resto-content {
+    display: flex;
+    gap: 12px;
+}
+
+.modal-resto-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.modal-resto-details {
+    flex: 1;
+}
+
+.modal-resto-item.highlight {
+    animation: itemPulse 1s ease;
+}
+
+@keyframes itemPulse {
+    0%, 100% { 
+        box-shadow: 0 0 0 0 rgba(0,170,108,0);
+    }
+    50% { 
+        box-shadow: 0 0 20px 5px rgba(0,170,108,0.5);
+    }
+}
+
+
+.visible-count {
+    background: #00aa6c;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+/* Header du Modal */
+.modal-map-header {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+.modal-header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.modal-close-btn {
+    background: transparent;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--text-dark);
+    transition: var(--transition);
+}
+.modal-title-section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.modal-subtitle {
+    font-size: 14px;
+    color: var(--text-gray);
+    margin-top: 2px;
+}
+
+.modal-subtitle .count {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Search Bar dans Header */
+.modal-search-bar {
+    flex: 1;
+    max-width: 400px;
+    position: relative;
+}
+
+.modal-search-bar input {
+    width: 100%;
+    padding: 10px 40px 10px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 24px;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.modal-search-bar input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.modal-search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-gray);
+}
+
+/* Filtres Bar */
+.modal-filters-bar {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.modal-filters-bar::-webkit-scrollbar {
+    height: 6px;
+}
+
+.modal-filters-bar::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.filter-btn-modal {
+    background: white;
+    border: 2px solid var(--border-color);
+    color: var(--text-dark);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-btn-modal:hover {
+    border-color: var(--primary-color);
+    background: #f0fdf7;
+}
+
+.filter-btn-modal.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.filter-btn-modal i {
+    font-size: 12px;
+}
+
+/* Main Content (Carte + Liste) */
+.modal-map-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+/* Section Carte */
+.modal-map-section {
+    flex: 1;
+    position: relative;
+}
+
+#modalMap {
+    width: 100%;
+    height: 100%;
+}
+
+/* Section Liste */
+.modal-list-section {
+    width: 420px;
+    background: white;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-list-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-light);
+}
+
+.modal-list-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 8px 0;
+}
+
+.modal-sort-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: white;
+}
+
+.modal-restaurants-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+/* Carte Restaurant dans la Liste */
+.modal-resto-item {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.modal-resto-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.modal-resto-item.active {
+    border-color: var(--primary-color);
+    background: #f0fdf7;
+    box-shadow: 0 0 0 3px rgba(0,170,108,0.1);
+}
+
+.modal-resto-item.highlight {
+    animation: highlightPulse 1.5s ease;
+}
+
+@keyframes highlightPulse {
+    0%, 100% { 
+        box-shadow: 0 0 0 0 rgba(0,170,108,0);
+    }
+    50% { 
+        box-shadow: 0 0 20px 5px rgba(0,170,108,0.5);
+    }
+}
+
+.modal-resto-content {
+    display: flex;
+    gap: 12px;
+}
+
+.modal-resto-image {
+    width: 90px;
+    height: 90px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.modal-resto-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-resto-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.modal-resto-type {
+    font-size: 12px;
+    color: var(--text-gray);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.modal-resto-type i {
+    color: var(--primary-color);
+    font-size: 11px;
+}
+
+.modal-resto-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.modal-resto-info {
+    font-size: 12px;
+    color: var(--text-gray);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.modal-resto-info i {
+    color: var(--primary-color);
+    font-size: 11px;
+}
+
+.modal-resto-rating {
+    background: linear-gradient(135deg, var(--primary-color), #00d084);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.modal-resto-rating i {
+    color: #ffd700;
+    font-size: 10px;
+}
+
+.modal-resto-map-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: white;
+    border: 1.5px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 2;
+}
+
+.modal-resto-map-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Status Badge (ouvert/fermé) */
+.status-badge-modal {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-badge-modal.open {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge-modal.closed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Desktop Large */
+@media (min-width: 1400px) {
+    .modal-list-section {
+        width: 480px;
+    }
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+    .modal-list-section {
+        width: 360px;
+    }
+    
+    .modal-search-bar {
+        max-width: 300px;
+    }
+    
+    .modal-resto-image {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .modal-map-content {
+        flex-direction: column-reverse; /* Liste en bas, carte en haut */
+    }
+    
+    .modal-list-section {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        height: 40%; /* Liste prend 40% de la hauteur */
+    }
+    
+    .modal-map-section {
+        height: 60%; /* Carte prend 60% de la hauteur */
+    }
+    
+    .modal-search-bar {
+        display: none; /* Masquer la recherche sur mobile */
+    }
+    
+    .modal-filters-bar {
+        padding: 10px 15px;
+    }
+    
+    .filter-btn-modal {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .modal-resto-item {
+        padding: 10px;
+    }
+    
+    .modal-resto-image {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .modal-resto-name {
+        font-size: 14px;
+    }
+    
+    .modal-header-left {
+        flex: 1;
+    }
+    
+    .modal-title-section h2 {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 576px) {
+    .modal-map-header {
+        padding: 12px 15px;
+    }
+    
+    .modal-list-section {
+        height: 45%;
+    }
+    
+    .modal-map-section {
+        height: 55%;
+    }
+    
+    .modal-resto-map-btn {
+        position: static;
+        width: 100%;
+        justify-content: center;
+        margin-top: 8px;
+    }
+}
+
+/* Empty State */
+.modal-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-gray);
+}
+
+.modal-empty-state i {
+    font-size: 64px;
+    color: var(--border-color);
+    margin-bottom: 20px;
+}
+
+.modal-empty-state h4 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.modal-empty-state p {
+    font-size: 14px;
+}
+
+/* Mini liste restaurants dans modal */
+.modal-sidebar {
+    width: 380px;
+    background: white;
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.modal-sidebar-header {
+    padding: 25px;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), #00d084);
+    color: white;
+}
+
+.modal-sidebar-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.modal-sidebar-header p {
+    margin: 5px 0 0 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.modal-restaurants-list {
+    padding: 15px;
+}
+
+.modal-resto-item {
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: white;
+}
+
+.modal-resto-item:hover {
+    border-color: var(--primary-color);
+    background: #f0fdf7;
+    transform: translateX(5px);
+    box-shadow: var(--shadow-sm);
+}
+
+.modal-resto-item.active {
+    border-color: var(--primary-color);
+    background: #f0fdf7;
+    box-shadow: 0 0 0 2px rgba(0,170,108,0.2);
+}
+
+.modal-resto-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+}
+
+.modal-resto-info {
+    font-size: 13px;
+    color: var(--text-gray);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.modal-resto-info i {
+    color: var(--primary-color);
+    width: 14px;
+}
+
+.modal-resto-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+/* Carte dans modal */
+.modal-map-container {
+    flex: 1;
+    position: relative;
+}
+
+#modalMap {
+    width: 100%;
+    height: 100%;
+}
+
+/* ===== PAGINATION ===== */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px 0;
+    margin-top: 30px;
+    border-top: 1px solid var(--border-color);
+}
+
+.pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.page-item .page-link {
+    border: 1.5px solid var(--border-color);
+    color: var(--text-dark);
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    transition: var(--transition);
+    background: white;
+}
+
+.page-item.active .page-link {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,170,108,0.3);
+}
+
+.page-item .page-link:hover:not(.active) {
+    background: var(--bg-light);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== SCROLLBAR CUSTOM ===== */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
+}
+
+/* ===== LOADING SPINNER ===== */
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 60px;
+}
+
+.spinner {
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+    .restaurants-grid.grid-view {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .search-info h1 {
+        font-size: 26px;
+    }
+    
+    .modal-sidebar {
+        width: 320px;
+    }
+    
+    .restaurants-grid.grid-view {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .search-header {
+        padding: 15px 0;
+    }
+    
+    .search-info h1 {
+        font-size: 22px;
+    }
+    
+    .header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .btn-icon {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .list-view .restaurant-card .card-content {
+        flex-direction: column;
+    }
+    
+    .list-view .card-image {
+        flex: 0 0 200px;
+        width: 100%;
+    }
+    
+    .restaurants-grid.grid-view {
+        grid-template-columns: 1fr;
+    }
+    
+    .map-modal-content {
+        flex-direction: column;
+        height: 95%;
+        width: 98%;
+    }
+    
+    .modal-sidebar {
+        width: 100%;
+        max-height: 40%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .modal-close-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .restaurants-section {
+        padding: 20px 15px;
+    }
+    
+    .restaurant-name {
+        font-size: 18px;
+    }
+    
+    .card-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .view-on-map-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ===== HIDDEN DATA ===== */
+.hidden-data {
+    display: none;
+}
+
+/* ===== LEAFLET POPUP CUSTOM ===== */
+.leaflet-popup-content-wrapper {
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+}
+
+.custom-popup {
+    text-align: center;
+    padding: 12px;
+    min-width: 200px;
+}
+
+.custom-popup h5 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+}
+
+.custom-popup p {
+    font-size: 13px;
+    color: var(--text-gray);
+    margin: 6px 0;
+    line-height: 1.5;
+}
+
+.custom-popup .rating {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-weight: 600;
+    margin: 10px 0;
+}
+
+.popup-view-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: var(--transition);
+}
+
+.popup-view-btn:hover {
+    background: var(--primary-hover);
+}
+
+/* ===== CORRECTION BOUTON CLOSE MODAL ===== */
+.modal-close-btn {
+    position: fixed; /* Changed from absolute to fixed */
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--text-dark);
+    box-shadow: var(--shadow-lg);
+    transition: var(--transition);
+    z-index: 10001; /* Increased z-index */
+}
+
+.modal-close-btn:hover {
+    transform: rotate(90deg) scale(1.1);
+    background: var(--secondary-color);
+    color: white;
+}
+
+/* ===== NOUVEAU BOUTON RETOUR À LA LISTE ===== */
+.back-to-list-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    transition: var(--transition);
+    z-index: 10001;
+}
+
+.back-to-list-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,170,108,0.4);
+}
+
+.back-to-list-btn i {
+    font-size: 18px;
+}
+
+/* ===== RESPONSIVE POUR LES BOUTONS MODAL ===== */
+@media (max-width: 768px) {
+    .modal-close-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+        top: 15px;
+        right: 15px;
+    }
+    
+    .back-to-list-btn {
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+    
+    .back-to-list-btn span {
+        display: none; /* Cache le texte sur mobile, garde juste l'icône */
+    }
+}
+
+@media (max-width: 576px) {
+    .back-to-list-btn {
+        padding: 12px;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        justify-content: center;
+    }
+    
+    .back-to-list-btn span {
+        display: none;
+    }
+}
+
+/* ===== MESSAGE DE FILTRAGE ===== */
+.filter-message {
+    background: white;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 30px;
+    animation: fadeInMessage 0.5s ease;
+}
+
+@keyframes fadeInMessage {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filter-message i.fa-search {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+/* ===== AMÉLIORATION VISUAL DES FILTRES ACTIFS ===== */
+.filter-chip {
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-chip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.filter-chip:hover::before {
+    left: 100%;
+}
+
+.filter-chip.active {
+    position: relative;
+}
+
+.filter-chip.active::after {
+    content: '✓';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 30px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* ===== COMPTEUR DE RÉSULTATS ===== */
+.results-counter {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 10px;
+    animation: countUpdate 0.3s ease;
+}
+
+@keyframes countUpdate {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+/* ===== TRANSITION SMOOTH POUR LES CARTES ===== */
+.restaurant-card {
+    transition: all 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+}
+
+.restaurant-card[style*="display: none"] {
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
+}
+
+/* ===== ICÔNES DANS LES BOUTONS DE FILTRE ===== */
+.filter-chip i {
+    margin-right: 5px;
+    font-size: 14px;
+}
+/* ===== ANIMATIONS ENTRÉE MODAL RESTO ITEMS ===== */
+.modal-resto-item {
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: white;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ===== NOUVEAU : LAYOUT AVEC PHOTO ===== */
+.modal-resto-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.modal-resto-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid var(--border-color);
+}
+
+.modal-resto-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-resto-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.modal-resto-info {
+    font-size: 13px;
+    color: var(--text-gray);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.modal-resto-info i {
+    color: var(--primary-color);
+    width: 14px;
+}
+
+.modal-resto-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.modal-resto-item:nth-child(even) {
+    animation-delay: 0.05s;
+}
+
+/* ===== AMÉLIORATION CLUSTERS LEAFLET ===== */
+.marker-cluster-small {
+    background-color: rgba(0, 170, 108, 0.6);
+}
+
+.marker-cluster-small div {
+    background-color: rgba(0, 170, 108, 0.8);
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.marker-cluster-medium {
+    background-color: rgba(255, 165, 0, 0.6);
+}
+
+.marker-cluster-medium div {
+    background-color: rgba(255, 165, 0, 0.8);
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.marker-cluster-large {
+    background-color: rgba(255, 90, 95, 0.6);
+}
+
+.marker-cluster-large div {
+    background-color: rgba(255, 90, 95, 0.8);
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.marker-cluster {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.marker-cluster:hover {
+    transform: scale(1.15);
+}
+
+/* ===== LÉGENDE CARTE ===== */
+.map-legend {
+    animation: slideInFromBottom 0.5s ease;
+}
+
+@keyframes slideInFromBottom {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== AMÉLIORATION POPUP LEAFLET ===== */
+.leaflet-popup-content-wrapper {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 0;
+    overflow: hidden;
+}
+
+.leaflet-popup-content {
+    margin: 0;
+    min-width: 200px;
+}
+
+.custom-popup {
+    text-align: center;
+    padding: 20px;
+}
+
+.custom-popup h5 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 8px;
+}
+
+.custom-popup p {
+    font-size: 13px;
+    color: var(--text-gray);
+    margin: 8px 0;
+    line-height: 1.6;
+    text-align: left;
+}
+
+.custom-popup .rating {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary-color), #00d084);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 12px 0;
+    box-shadow: 0 4px 12px rgba(0,170,108,0.3);
+}
+
+.popup-view-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: var(--transition);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.popup-view-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,170,108,0.4);
+}
+
+.popup-view-btn::before {
+    content: '👁️';
+    font-size: 16px;
+}
+
+/* ===== CONTRÔLES ZOOM LEAFLET ===== */
+.leaflet-control-zoom {
+    border: none !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+.leaflet-control-zoom a {
+    background: white !important;
+    color: var(--primary-color) !important;
+    border: none !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    width: 40px !important;
+    height: 40px !important;
+    line-height: 40px !important;
+    transition: var(--transition) !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: var(--primary-color) !important;
+    color: white !important;
+}
+
+.leaflet-control-zoom a:first-child {
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0 !important;
+}
+
+.leaflet-control-zoom a:last-child {
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+    border-top: 1px solid var(--border-color) !important;
+}
+
+/* ===== LOADING DANS MODAL ===== */
+.modal-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10000;
+    background: white;
+    padding: 30px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-loading .spinner {
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+.modal-loading p {
+    color: var(--text-gray);
+    font-size: 14px;
+    margin: 0;
+}
+
+/* ===== EFFET RIPPLE SUR BOUTONS ===== */
+.btn-icon, .view-toggle-btn, .filter-chip, .view-on-map-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-icon::after, .view-toggle-btn::after, 
+.filter-chip::after, .view-on-map-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-icon:active::after, .view-toggle-btn:active::after,
+.filter-chip:active::after, .view-on-map-btn:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* ===== SKELETON LOADING POUR CARTES ===== */
+@keyframes skeleton-loading {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
+}
+
+.restaurant-card.loading {
+    background: linear-gradient(
+        90deg,
+        #f0f0f0 0px,
+        #e0e0e0 40px,
+        #f0f0f0 80px
+    );
+    background-size: 200px 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+/* ===== BADGE NOUVEAU ===== */
+.new-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--secondary-color);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(255, 90, 95, 0.4);
+    animation: newBadgePulse 2s ease-in-out infinite;
+}
+
+@keyframes newBadgePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* ===== AMÉLIORATION SCROLL DANS MODAL SIDEBAR ===== */
+.modal-restaurants-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) var(--bg-light);
+}
+
+.modal-restaurants-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-restaurants-list::-webkit-scrollbar-track {
+    background: var(--bg-light);
+}
+
+.modal-restaurants-list::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.modal-restaurants-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
+}
+
+/* ===== TOOLTIP CUSTOM ===== */
+.custom-tooltip {
+    position: relative;
+}
+
+.custom-tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 10000;
+}
+
+.custom-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.custom-tooltip:hover::before,
+.custom-tooltip:hover::after {
+    opacity: 1;
+}
+
+.custom-tooltip:hover::before {
+    transform: translateX(-50%) translateY(-10px);
+}
+
+.modal-resto-item:hover .modal-resto-image {
+    transform: scale(1.05);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,170,108,0.3);
+}
+
+.modal-resto-image {
+    transition: all 0.3s ease;
+}
+@media (max-width: 576px) {
+    .modal-resto-content {
+        flex-direction: column;
+    }
+    
+    .modal-resto-image {
+        width: 100%;
+        height: 120px;
+    }
+}
+ 

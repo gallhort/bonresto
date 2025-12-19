@@ -1,0 +1,158 @@
+2025-12-17 20:02:35 - === DÉBUT DU TRAITEMENT ===
+2025-12-17 20:02:35 - POST data: Array
+(
+    [nom] => Burger piece
+    [name] => toto
+    [food_quality] => 5
+    [service] => 5
+    [location] => 5
+    [price] => 5
+    [title] => qsdqsdq
+    [msg] => qsdqsdqsd
+)
+
+2025-12-17 20:02:35 - FILES data: Array
+(
+    [fileupload] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Capture d'écran 2025-12-13 001946.png
+                    [1] => Capture d'écran 2025-12-14 173133.png
+                    [2] => Capture d'écran 2025-12-15 003814.png
+                )
+
+            [type] => Array
+                (
+                    [0] => image/png
+                    [1] => image/png
+                    [2] => image/png
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => C:\xamppzz\tmp\phpC79A.tmp
+                    [1] => C:\xamppzz\tmp\phpC79B.tmp
+                    [2] => C:\xamppzz\tmp\phpC7AC.tmp
+                )
+
+            [error] => Array
+                (
+                    [0] => 0
+                    [1] => 0
+                    [2] => 0
+                )
+
+            [size] => Array
+                (
+                    [0] => 43654
+                    [1] => 80074
+                    [2] => 43640
+                )
+
+        )
+
+)
+
+2025-12-17 20:02:35 - Commentaire existe déjà ? OUI
+2025-12-17 20:02:35 - Commentaire existe déjà, redirection
+2025-12-17 20:04:18 - === DÉBUT DU TRAITEMENT ===
+2025-12-17 20:04:18 - POST data: Array
+(
+    [nom] => House of Burgers Kouba
+    [name] => toto
+    [food_quality] => 5
+    [service] => 5
+    [location] => 5
+    [price] => 5
+    [title] => qsdqsd
+    [msg] => qsdqsdqsd
+)
+
+2025-12-17 20:04:18 - FILES data: Array
+(
+    [fileupload] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Capture d'écran 2025-12-13 001946.png
+                    [1] => Capture d'écran 2025-12-14 173133.png
+                    [2] => Capture d'écran 2025-12-15 003814.png
+                )
+
+            [type] => Array
+                (
+                    [0] => image/png
+                    [1] => image/png
+                    [2] => image/png
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => C:\xamppzz\tmp\php5D12.tmp
+                    [1] => C:\xamppzz\tmp\php5D23.tmp
+                    [2] => C:\xamppzz\tmp\php5D24.tmp
+                )
+
+            [error] => Array
+                (
+                    [0] => 0
+                    [1] => 0
+                    [2] => 0
+                )
+
+            [size] => Array
+                (
+                    [0] => 43654
+                    [1] => 80074
+                    [2] => 43640
+                )
+
+        )
+
+)
+
+2025-12-17 20:04:18 - Commentaire existe déjà ? NON
+2025-12-17 20:04:18 - Commentaire inséré avec ID: 1020
+2025-12-17 20:04:18 - Vérification des fichiers uploadés...
+2025-12-17 20:04:18 - fileupload existe dans $_FILES
+2025-12-17 20:04:19 - Type de $_FILES['fileupload']['name']: array
+2025-12-17 20:04:19 - Nombre de fichiers: 3
+2025-12-17 20:04:19 - Premier fichier: Capture d'écran 2025-12-13 001946.png
+2025-12-17 20:04:19 - Début du traitement des photos
+2025-12-17 20:04:19 - Dossier cible: ../img/House_of_Burgers_Kouba
+2025-12-17 20:04:19 - Le dossier n'existe pas, création...
+2025-12-17 20:04:19 - Dossier créé avec succès
+2025-12-17 20:04:19 - Nombre total de fichiers à traiter: 3
+2025-12-17 20:04:19 - --- Traitement fichier #0 ---
+2025-12-17 20:04:19 - Nom: Capture d'écran 2025-12-13 001946.png
+2025-12-17 20:04:19 - Type: image/png
+2025-12-17 20:04:19 - Taille: 43654
+2025-12-17 20:04:19 - Erreur: 0
+2025-12-17 20:04:19 - Tmp: C:\xamppzz\tmp\php5D12.tmp
+2025-12-17 20:04:19 - Destination finale: ../img/House_of_Burgers_Kouba/6942feb312411_1765998259_0.png
+2025-12-17 20:04:19 - ✅ Fichier déplacé avec succès
+2025-12-17 20:04:19 - Chemin BDD: img/House_of_Burgers_Kouba/6942feb312411_1765998259_0.png
+2025-12-17 20:04:19 - ✅ Photo insérée en BDD avec succès
+2025-12-17 20:04:19 - --- Traitement fichier #1 ---
+2025-12-17 20:04:19 - Nom: Capture d'écran 2025-12-14 173133.png
+2025-12-17 20:04:19 - Type: image/png
+2025-12-17 20:04:19 - Taille: 80074
+2025-12-17 20:04:19 - Erreur: 0
+2025-12-17 20:04:19 - Tmp: C:\xamppzz\tmp\php5D23.tmp
+2025-12-17 20:04:19 - Destination finale: ../img/House_of_Burgers_Kouba/6942feb31f618_1765998259_1.png
+2025-12-17 20:04:19 - ✅ Fichier déplacé avec succès
+2025-12-17 20:04:19 - Chemin BDD: img/House_of_Burgers_Kouba/6942feb31f618_1765998259_1.png
+2025-12-17 20:04:19 - ✅ Photo insérée en BDD avec succès
+2025-12-17 20:04:19 - --- Traitement fichier #2 ---
+2025-12-17 20:04:19 - Nom: Capture d'écran 2025-12-15 003814.png
+2025-12-17 20:04:19 - Type: image/png
+2025-12-17 20:04:19 - Taille: 43640
+2025-12-17 20:04:19 - Erreur: 0
+2025-12-17 20:04:19 - Tmp: C:\xamppzz\tmp\php5D24.tmp
+2025-12-17 20:04:19 - Destination finale: ../img/House_of_Burgers_Kouba/6942feb32d970_1765998259_2.png
+2025-12-17 20:04:19 - ✅ Fichier déplacé avec succès
+2025-12-17 20:04:19 - Chemin BDD: img/House_of_Burgers_Kouba/6942feb32d970_1765998259_2.png
+2025-12-17 20:04:19 - ✅ Photo insérée en BDD avec succès
+2025-12-17 20:04:19 - Nombre de photos uploadées: 3
+2025-12-17 20:04:19 - Redirection vers detail-restaurant-2.php

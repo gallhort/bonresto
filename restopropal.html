@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Proposition d'ajout de restaurant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="keywords" content="Proposition d'ajout de restaurant halal casher cacher lebonresto" />
+    <meta name="description" content="Vous pouvez proposer de nouveaux établissement afin qu'ils soient représentés sur notre site lebonresto" />
+
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    
+		<link href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+
+
+		<script src="external/jquery.hotkeys.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+  
+		<link href="restopropal.css" rel="stylesheet">
+    <script src="restopropal.js"></script>
+  </head>
+  <body>
+
+
+
+
+
+
+
+
+
+<div class="container">
+  <div class="hero-unit">
+	<h1>Proposition d'ajout de restaurant.   </h1>
+	<h4>Entrez les informations correspondant au restaurant, nous les traiterons dans les plus brefs délais.</h4>
+  
+  <hr/>
+
+  <div id="alerts"></div>
+
+
+
+  <div class="row">
+
+    <!-- Partie gauche du modal d'enregistrement -->
+    
+      <div class="col-lg-6">
+          <form enctype="multipart/form-data" action="addresto.php" method="POST">
+    
+    
+    <div class="mb-3 col-lg-10">
+        <label for="nom" class="form-label">Nom du restaurant</label>
+        <input type="input" class="form-control" name="nom" id="nom" required>
+    </div>
+    
+    <div class="mb-3 col-lg-10">
+        <label for="type" class="form-label">Spécialité</label>
+        <input type="texte" class="form-control" name="type" id="type" required>
+    </div>
+    <div class="mb-3 col-lg-10">
+        <label for="adresse" class="form-label">adresse</label>
+        <input type="text" class="form-control" name="adresse" id="adresse" required>
+    </div>
+    <div class="mb-3 col-lg-10">
+      <label for="cp" class="form-label">Code postal</label>
+      <input type="text" class="form-control" name="cp" id="cp" required>
+  </div>
+  <div class="mb-3 col-lg-10">
+    <label for="ville" class="form-label">Ville</label>
+    <input type="text" class="form-control" name="ville" id="ville" required>
+</div>
+<input type="text" id='inputeditor' name='description' >
+    <div class="mb-3 col-lg-10">
+        <label for="phone" class="form-label">Téléphone</label>
+        <input type="text" class="form-control" name="phone" id="phone" required>
+    </div>
+
+
+    
+    </div>
+
+    <div class="container  column  col-lg-6 ">
+       
+      <div class="mb-3 col-lg-10">
+        <label for="phone" class="form-label">Téléphone</label>
+        <input type="text" class="form-control" name="phone" id="phone">
+    </div>
+    <div class="mb-3 col-lg-10">
+        <label for="web" class="form-label">Site web</label>
+        <input type="text" class="form-control" name="web" id="web">
+    </div>
+
+    <div class="mb-3 col-lg-10">
+      <label for="regime" class="form-label">Fonction:</label>
+      <select class="form-select form-control" name="regime" id="regime" aria-label="Default select example">
+        <option selected disabled>Choisir un régime</option>
+        <option value="Halal">Halal</option>
+        <option value="Casher">Casher</option>
+        <option value="Vegan">Vegan</option>
+        <option value="Vegie">Vegie</option>
+      </select>
+      </div>
+  
+      <div class="mb-3 col-lg-10" id="certDiv" style="display:none">
+        
+        <label for="cert" class="form-label">Certificateur(s)</label>
+        <input type="text" class="form-control" name="cert" id="cert">
+    </div>
+
+<div class="row">
+    <div class="mb-3 col-lg-4">
+    <input type="checkbox" id="Parking" name="Parking" value="1">
+    <label for="Parking"> Parking</label><br>
+    <input type="checkbox" id="gamezone" name="gamezone" value="1">
+    <label for="gamezone"> Aire de jeux</label><br>
+    <input type="checkbox" id="Handi" name="Handi" value="1">
+    <label for="Handi"> Handi-friendly</label><br>
+  </div>
+  <div class="mb-3 col-lg-4">
+    <input type="checkbox" id="baby" name="baby" value="1">
+    <label for="baby"> Zone bébé</label><br>
+    <input type="checkbox" id="priere" name="priere" value="1">
+    <label for="priere"> Salle de prière</label><br>
+    <input type="checkbox" id="private" name="private" value="1">
+    <label for="private"> Salons privés</label><br>
+  </div>
+  <div class="mb-3 col-lg-4">
+    <input type="checkbox" id="Voiturier" name="Voiturier" value="1">
+    <label for="Voiturier"> Voiturier</label><br>
+    <input type="checkbox" id="wifi" name="wifi" value="1">
+    <label for="wifi"> Wifi gratuit</label><br>
+
+  </div>
+  </div>
+
+
+    <div class="row  justify-content-center align-items-center">
+    <div class="text-center">
+    <input type="hidden" name="MAX_FILE_SIZE" value="2500000" />
+    <label for="main" class="form-label">Photo profil</label>
+    <input type="file" name="main" onchange="previewFile(this);"     ><br>
+    <label for="slide1" class="form-label">Photo slide1</label>
+    <input type="file" name="slide1" onchange="previewFile(this);"     ><br>
+    <label for="slide2" class="form-label">Photo slide2</label>
+    <input type="file" name="slide2" onchange="previewFile(this);"     ><br>
+    <label for="slide3" class="form-label">Photo slide3</label>
+    <input type="file" name="slide3" onchange="previewFile(this);"     ><br>
+    <button type="submit" id='toto' class="btn btn-primary">J'enregistre</button>
+    </div>
+      
+    </div>
+    
+            </div>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    </form>
+
+    <!-- Fin de la partie droite du modal d'enregistrement -->
+    </div>
+    </div>
+
+
+
+
+<!-- TOOLBAR EDITOR -->
+<h3>Desciption du restaurant :</h3>
+    <div class="btn-toolbar" data-role="editor-toolbar" data-target="#editor">
+      <div class="btn-group">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" title="Font"><i class="icon-font"></i><b class="caret"></b></a>
+          <ul class="dropdown-menu">
+          </ul>
+        </div>
+      <div class="btn-group">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" title="Font Size"><i class="icon-text-height"></i>&nbsp;<b class="caret"></b></a>
+          <ul class="dropdown-menu">
+          <li><a data-edit="fontSize 5"><font size="5">Huge</font></a></li>
+          <li><a data-edit="fontSize 3"><font size="3">Normal</font></a></li>
+          <li><a data-edit="fontSize 1"><font size="1">Small</font></a></li>
+          </ul>
+      </div>
+      <div class="btn-group">
+        <a class="btn" data-edit="bold" title="Bold (Ctrl/Cmd+B)"><i class="icon-bold"></i></a>
+        <a class="btn" data-edit="italic" title="Italic (Ctrl/Cmd+I)"><i class="icon-italic"></i></a>
+    
+        <a class="btn" data-edit="underline" title="Underline (Ctrl/Cmd+U)"><i class="icon-underline"></i></a>
+      </div>
+      <div class="btn-group">
+        <a class="btn" data-edit="insertunorderedlist" title="Bullet list"><i class="icon-list-ul"></i></a>
+        <a class="btn" data-edit="insertorderedlist" title="Number list"><i class="icon-list-ol"></i></a>
+        <a class="btn" data-edit="outdent" title="Reduce indent (Shift+Tab)"><i class="icon-indent-left"></i></a>
+        <a class="btn" data-edit="indent" title="Indent (Tab)"><i class="icon-indent-right"></i></a>
+      </div>
+      <div class="btn-group">
+        <a class="btn" data-edit="justifyleft" title="Align Left (Ctrl/Cmd+L)"><i class="icon-align-left"></i></a>
+        <a class="btn" data-edit="justifycenter" title="Center (Ctrl/Cmd+E)"><i class="icon-align-center"></i></a>
+        <a class="btn" data-edit="justifyright" title="Align Right (Ctrl/Cmd+R)"><i class="icon-align-right"></i></a>
+        <a class="btn" data-edit="justifyfull" title="Justify (Ctrl/Cmd+J)"><i class="icon-align-justify"></i></a>
+      </div>
+
+      
+         <div class="btn-group">
+        <a class="btn" data-edit="undo" title="Undo (Ctrl/Cmd+Z)"><i class="icon-undo"></i></a>
+        <a class="btn" data-edit="redo" title="Redo (Ctrl/Cmd+Y)"><i class="icon-repeat"></i></a>
+      </div>
+   
+    </div>
+
+
+    <!-- DIV EDITOR -->
+
+
+
+    
+    <div id="editor"> </div>
+
+    <button onclick='pickdiv()'></button>
+  </div>
+  <input type="hidden" id='inputeditor' hidden>
+</div>
+
+
+
+
+
+<script>
+
+
+document.getElementById('toto').addEventListener(
+
+'click',
+function (e){
+  e.preventDefault;
+  document.getElementById('inputeditor').value=document.getElementById('editor').innerHTML;
+
+}
+);
+
+
+
+
+
+// Récupération du select des régimes pour afficher ou non le certificateur
+document.getElementById('regime').addEventListener(
+
+'change',
+function (){
+
+  switch(this.value){
+
+case 'Halal':
+document.getElementById('certDiv').style.display='initial';
+break;
+
+case 'Casher':
+document.getElementById('certDiv').style.display='initial';
+break;
+
+default:
+document.getElementById('certDiv').style.display='none';
+
+}
+});
+
+
+// test de recuperation du code html d'une div
+function pickdiv(){
+
+  document.getElementById('inputeditor').value=document.getElementById('editor').innerHTML;
+console.log(document.getElementById('inputeditor').value);
+}
+
+
+
+  $(function(){
+
+    //gestion des fonts 
+    function initToolbarBootstrapBindings() {
+      var fonts = ['Serif', 'Sans', 'Arial', 'Arial Black', 'Courier', 
+            'Courier New', 'Comic Sans MS', 'Helvetica', 'Impact', 'Lucida Grande', 'Lucida Sans', 'Tahoma', 'Times',
+            'Times New Roman', 'Verdana'],
+            fontTarget = $('[title=Font]').siblings('.dropdown-menu');
+
+      $.each(fonts, function (idx, fontName) {
+          fontTarget.append($('<li><a data-edit="fontName ' + fontName +'" style="font-family:\''+ fontName +'\'">'+fontName + '</a></li>'));
+      });
+
+      // tooltip perso sur hover des bouttons de la barre d'outils
+      $('a[title]').tooltip({container:'body'});
+
+      
+    	$('.dropdown-menu input').click(function() {return false;})
+		    .change(function () {$(this).parent('.dropdown-menu').siblings('.dropdown-toggle').dropdown('toggle');})
+        .keydown('esc', function () {this.value='';$(this).change();});
+
+      $('[data-role=magic-overlay]').each(function () { 
+        var overlay = $(this), target = $(overlay.data('target')); 
+        overlay.css('opacity', 0).css('position', 'absolute').offset(target.offset()).width(target.outerWidth()).height(target.outerHeight());
+      });
+
+	};
+
+
+
+
+  // gestion des erreurs lors de l'ajout de fichier
+	function showErrorAlert (reason, detail) {
+		var msg='';
+		if (reason==='unsupported-file-type') { msg = "Unsupported format " +detail; }
+		else {
+			console.log("error uploading file", reason, detail);
+		}
+		$('<div class="alert"> <button type="button" class="close" data-dismiss="alert">&times;</button>'+ 
+		 '<strong>File upload error</strong> '+msg+' </div>').prependTo('#alerts');
+	};
+
+
+
+    initToolbarBootstrapBindings();  
+	$('#editor').wysiwyg({ fileUploadError: showErrorAlert} );
+    window.prettyPrint && prettyPrint();
+  });
+
+</script>
+
+
+
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurants Alger</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 15px 0;
+      background: #f8f8f8;
+    }
+  </style>
+</head>
+<body>
+  <h1>Restaurants à Alger</h1>
+  <button id="exportCsvBtn">Exporter CSV</button>
+  <div id="results">Chargement…</div>
+
+  <!-- Charger l'API Google Maps JS avec Places Library -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=&libraries=places"></script>
+  <script>
+    const restaurantsData = [];
+    const MAX_RESTAURANTS = 20;
+
+    function init() {
+      const container = document.getElementById("results");
+      container.innerHTML = "";
+
+      // On crée une "map invisible" pour utiliser PlacesService
+      const map = new google.maps.Map(document.createElement('div'));
+      const service = new google.maps.places.PlacesService(map);
+
+      const request = {
+        query: 'restaurants Alger',
+        fields: ['name', 'formatted_address', 'place_id', 'rating', 'user_ratings_total', 'formatted_phone_number', 'website', 'opening_hours'],
+        type: 'restaurant'
+      };
+
+      service.textSearch(request, async (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          const restaurants = results.slice(0, MAX_RESTAURANTS);
+
+          for (const place of restaurants) {
+            await getDetails(place.place_id);
+          }
+        } else {
+          container.innerHTML = "Erreur lors de la récupération des restaurants.";
+          console.error(status);
+        }
+      });
+    }
+
+    function getDetails(placeId) {
+      return new Promise((resolve) => {
+        const map = new google.maps.Map(document.createElement('div'));
+        const service = new google.maps.places.PlacesService(map);
+
+        service.getDetails({
+          placeId,
+          fields: ['name', 'formatted_address', 'rating', 'user_ratings_total', 'formatted_phone_number', 'website', 'opening_hours']
+        }, (place, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK) {
+            restaurantsData.push(place);
+            displayPlace(place);
+          }
+          resolve();
+        });
+      });
+    }
+
+    function displayPlace(place) {
+      const container = document.getElementById("results");
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
+        <h2>${place.name}</h2>
+        <p><strong>Adresse :</strong> ${place.formatted_address || "Non renseignée"}</p>
+        <p><strong>Note :</strong> ${place.rating || "N/A"} ⭐</p>
+        <p><strong>Avis :</strong> ${place.user_ratings_total || 0}</p>
+        <p><strong>Téléphone :</strong> ${place.formatted_phone_number || "Non renseigné"}</p>
+        <p><strong>Site web :</strong> ${place.website ? `<a href="${place.website}" target="_blank">${place.website}</a>` : "Non disponible"}</p>
+        <p><strong>Horaires :</strong><br>
+          ${place.opening_hours ? place.opening_hours.weekday_text.join("<br>") : "Non disponibles"}
+        </p>
+      `;
+
+      container.appendChild(card);
+    }
+
+    // Export CSV
+    function exportToCsv(filename = "restaurants.csv") {
+      if (!restaurantsData.length) return alert("Aucune donnée à exporter !");
+      const headers = ["name","formatted_address","rating","user_ratings_total","formatted_phone_number","website","opening_hours"].join(",");
+      const rows = restaurantsData.map(r => {
+        const opening = r.opening_hours ? r.opening_hours.weekday_text.join(" | ") : "";
+        const values = [r.name, r.formatted_address, r.rating, r.user_ratings_total, r.formatted_phone_number, r.website || "", opening];
+        return values.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+      });
+      const csvContent = [headers, ...rows].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+
+    document.getElementById("exportCsvBtn").addEventListener("click", () => exportToCsv());
+
+    // Lancer l'initialisation
+    init();
+  </script>
+</body>
+</html>
