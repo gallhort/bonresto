@@ -1,0 +1,32 @@
+# Fichiers temporaires OS
+Thumbs.db
+.DS_Store
+ehthumbs.db
+
+# Fichiers logs
+*.log
+
+# Environnements / configurations locales
+.env
+.env.local
+.env.*.local
+*.local.php
+
+# Dossier des dépendances (Composer)
+vendor/
+
+# Dossier des modules front-end si utilisé (npm, yarn)
+node_modules/
+
+# Dossier de cache PHP / sessions temporaires
+cache/
+tmp/
+sessions/
+
+# Config VSCode
+.vscode/
+
+# Backup et fichiers temporaires
+*.bak
+*.swp
+*~
