@@ -1,15 +1,12 @@
 <?php
 /* ----------  conf ---------- */
-$dsn  = 'mysql:host=localhost;dbname=lebonresto;charset=utf8mb4';
-$user = 'sam';
-$pass = '123';
-
-try {
-    $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-} catch (PDOException $e) {
+// Utiliser la connexion centralisée
+include_once __DIR__ . '/../../connect.php';
+if (!isset($dbh) || !$dbh) {
     http_response_code(500);
     exit('DB error');
 }
+$pdo = $dbh; // compatibilité
 
 /* ----------  récupère le terme ---------- */
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';

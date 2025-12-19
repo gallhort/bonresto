@@ -1,12 +1,15 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 
-$servername = 'localhost';
-$username = 'sam';
-$password = '123';
-$db = 'lebonresto';
+include_once __DIR__ . '/connect.php';
+// debug uses $conn from connect.php
 
-$conn = new mysqli($servername, $username, $password, $db);
+// $conn provided by connect.php
+if (!isset($conn) || $conn->connect_error) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Erreur de connexion BDD']);
+    exit;
+}
 $conn->set_charset("utf8mb4");
 
 // Afficher tous les restaurants avec leurs coordonnées GPS

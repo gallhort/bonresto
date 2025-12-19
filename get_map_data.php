@@ -1,15 +1,11 @@
 <?php
 header('Content-Type: application/json');
 
-// Configuration BDD
-$servername = 'localhost';
-$username = 'sam';
-$password = '123';
-$db = 'lebonresto';
+include_once __DIR__ . '/connect.php';
+// $conn provided by connect.php
 
-// Connexion
-$conn = new mysqli($servername, $username, $password, $db);
-if ($conn->connect_error) {
+// $conn provided by connect.php
+if (!isset($conn) || $conn->connect_error) {
     echo json_encode(['success' => false, 'error' => 'Connexion échouée']);
     exit;
 }

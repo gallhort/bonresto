@@ -6,21 +6,13 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // (A) CONNECT TO DATABASE
-$dbhost = 'localhost';
-$dbname = 'lebonresto';
-$dbchar = 'utf8';
-$dbuser = 'sam';
-$dbpass = '123';
-
-try {
-  $pdo = new PDO(
-    "mysql:host=$dbhost;dbname=$dbname;charset=$dbchar",
-    $dbuser, $dbpass,
-    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-  );
-} catch (Exception $ex) {
-  die(json_encode(["error" => $ex->getMessage()]));
+// Utiliser le connecteur centralisé (connect.php) pour récupérer la connexion PDO ($dbh)
+include_once __DIR__ . '/../connect.php';
+if (!isset($dbh) || !$dbh) {
+    die(json_encode(["error" => "Impossible de se connecter à la BDD"]));
 }
+// $dbh est un PDO provenant de connect.php
+$pdo = $dbh; // compatibilité avec le reste du code
 
 // ⭐ IMPORTANT : TRAITER LES VOTES EN PREMIER (AVANT TOUT LE RESTE)
 if (isset($_POST['id']) && isset($_POST['useful'])) {

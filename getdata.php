@@ -2,10 +2,7 @@
 
         <?php
 
-            $servername = 'localhost';
-            $username = 'sam';
-            $password = '123';
-            $db='lebonresto';
+            include_once __DIR__ . '/connect.php';
 
 if(isset($_GET['type'])){
 
@@ -74,12 +71,9 @@ if(isset($_GET['type'])){
             }
             
 
-            //On établit la connexion
-            $conn = new mysqli($servername, $username, $password,$db);
-            
-            //On vérifie la connexion
-            if($conn->connect_error){
-                die('Erreur : ' .$conn->connect_error);
+            // $conn is provided by connect.php
+            if (!isset($conn) || $conn->connect_error) {
+                die('Erreur de connexion BDD.');
             }
 
         $resultat=mysqli_query($conn,$requete);
@@ -103,7 +97,12 @@ if(isset($_GET['type'])){
             }elseif(isset($_POST['nom'])){
                 $nom = trim($_POST['nom'] ?? '');
 
-                $dbh = new PDO('mysql:host=localhost;dbname=lebonresto', "sam", "123", [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                // Utiliser la connexion centralisée
+                include_once __DIR__ . '/connect.php';
+                if (!isset($dbh) || !$dbh) {
+                    echo json_encode([]);
+                    exit;
+                }
 
                 $stmt = $dbh->prepare("SELECT * from vendeur v JOIN photos p on v.Nom=p.Nom JOIN regime r on r.Nom=v.Nom JOIN options o on o.Nom=v.Nom WHERE r.NOM = ?");
                 $stmt->execute([$nom]);
@@ -111,18 +110,18 @@ if(isset($_GET['type'])){
 
                 echo json_encode($result);
             }elseif(isset($_POST['options'])){
-                                $result=[];
-                    $dbh = new PDO('mysql:host=localhost;dbname=lebonresto', "sam", "123");
-    
-                    foreach($dbh->query("SELECT COLUMN_NAME
-                    FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'lebonresto' AND TABLE_NAME = 'options'") as $row) {
-                    
-                    if($row["COLUMN_NAME"]=='id' || $row["COLUMN_NAME"]=='Nom'){
-                    
-                    }else{
-                    
-                        array_push($result,$row["COLUMN_NAME"] );
+                    $result = [];
+                    include_once __DIR__ . '/connect.php';
+                    if (!isset($dbh) || !$dbh) {
+                        echo json_encode($result);
+                        exit;
                     }
+
+                    $sqlCols = $dbh->prepare("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'options'");
+                    $sqlCols->execute([getenv('DB_NAME') ?: 'lebonresto']);
+                    foreach ($sqlCols->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                        if ($row["COLUMN_NAME"] == 'id' || $row["COLUMN_NAME"] == 'Nom') continue;
+                        $result[] = $row["COLUMN_NAME"];
                     }
     
 
