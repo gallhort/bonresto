@@ -4,7 +4,17 @@ mb_internal_encoding('UTF-8');
 ini_set('default_charset', 'UTF-8');
 
 session_start();
-$sessionURL = $_SESSION['resultURL'];
+$sessionURL = $_SESSION['resultURL'] ?? '';
+
+// Include DB connections and PDO wrapper (fail-safe)
+include_once __DIR__ . '/connect.php';
+require_once __DIR__ . '/classes/DatabasePDO.php';
+try {
+    $dbw = new DatabasePDO();
+} catch (Exception $e) {
+    error_log('detail-restaurant-2: DB init failed: ' . $e->getMessage());
+    // don't die; allow page to show error later if DB is missing
+}
 
 // Parser l'URL pour extraire les paramètres
 $urlParts = parse_url($sessionURL);
@@ -466,7 +476,15 @@ parse_str($urlParts['query'] ?? '', $params);
 
 	<?php
 
-	$nom = $_GET['nom'];
+	$nom_raw = $_GET['nom'] ?? '';
+	// Normalize and validate nom
+	$nom = trim($nom_raw);
+	if ($nom === '' || strlen($nom) > 200) {
+	    // Graceful fallback
+	    $nom = htmlspecialchars($nom_raw, ENT_QUOTES, 'UTF-8');
+	}
+	// Optional: restrict to printable characters
+	$nom = preg_replace('/[\x00-\x1F\x7F]/u', '', $nom);
 	include('connect.php');
 
 
@@ -483,30 +501,19 @@ $location=0;
 $price=0;
 $compt=0;
 
-	foreach ($dbh->query("SELECT count(*) as nbComment, avg(price) as price, avg(service) as service, avg(location) as location, avg(food) as food from comments c 
-							JOIN vendeur v on c.Nom=v.Nom 
-							WHERE c.NOM='$nom'") as $row) {
+	$stats = $dbw->fetch("SELECT count(*) as nbComment, avg(price) as price, avg(service) as service, avg(location) as location, avg(food) as food from comments c JOIN vendeur v on c.Nom=v.Nom WHERE c.NOM = :nom", ['nom' => $nom]);
 
-	$repas+=$row['food'];
-	$service+=$row['service'];
-	$location+=$row['location'];
-	$price+=$row['price'];
-	$nbComment=$row['nbComment'];
-	}
-
-
-
-	// Récupération des informations du restaurant en cours
-$nom_escaped = $conn->real_escape_string($nom);
-
-$query = "SELECT v.*, o.*, p.*
+	$repas = $stats['food'] ?? 0;
+	$service = $stats['service'] ?? 0;
+	$location = $stats['location'] ?? 0;
+	$price = $stats['price'] ?? 0;
+	$nbComment = $stats['nbComment'] ?? 0;
     FROM vendeur v
     LEFT JOIN options o ON v.Nom = o.Nom 
     LEFT JOIN photos p ON v.Nom = p.Nom 
-    WHERE v.Nom = '$nom_escaped'";
+    WHERE v.Nom = :nom LIMIT 1";
 
-$result = $conn->query($query);
-$row = $result->fetch_assoc();
+$row = $dbw->fetch($query, ['nom' => $nom]) ?: [];
 
 		$type = $row['Type'];
  
@@ -1314,14 +1321,15 @@ function openGallery(index) {
                     
                     <!-- Certification -->
                     <?php
-                    foreach ($dbh->query("SELECT * from regime r JOIN vendeur v on r.Nom=v.Nom WHERE r.NOM='$nom'") as $row) {
-                        if ($row['style'] != NULL) {
-                            echo '<div class="certification-badge">
+                    $regimes = $dbw->fetchAll("SELECT * from regime r JOIN vendeur v on r.Nom=v.Nom WHERE r.NOM = :nom", ['nom' => $nom]);
+                    foreach ($regimes as $row) {
+                        if (!empty($row['style'])) {
+                            echo '<div class="certification-badge'>
                                     <i class="fas fa-certificate"></i>
                                     <div class="certification-info">
                                         <h4>Restaurant ' . ucfirst($row['style']) . '</h4>';
                             if ($row['style'] == 'halal' || $row['style'] == 'casher') {
-                                echo '<p>Certifié par : ' . $row['cert'] . '</p>';
+                                echo '<p>Certifié par : ' . htmlspecialchars($row['cert']) . '</p>';
                             }
                             echo '  </div>
                                   </div>';
@@ -1333,33 +1341,34 @@ function openGallery(index) {
                     <h3><i class="fas fa-check-circle"></i> Services et équipements</h3>
                     <div class="options-grid">
                         <?php
-                        foreach ($dbh->query("SELECT * from options r JOIN vendeur v on r.Nom=v.Nom WHERE r.NOM='$nom'") as $row) {
-                            if ($row['wifi'] == 1) {
+                        $options_rows = $dbw->fetchAll("SELECT * from options r JOIN vendeur v on r.Nom=v.Nom WHERE r.NOM = :nom", ['nom' => $nom]);
+                        foreach ($options_rows as $row) {
+                            if (!empty($row['wifi']) && $row['wifi'] == 1) {
                                 echo '<div class="option-item">
                                         <i class="fas fa-wifi"></i>
                                         <span>WiFi gratuit</span>
                                       </div>';
                             }
-                            if ($row['parking'] == 1) {
+                            if (!empty($row['parking']) && $row['parking'] == 1) {
                                 echo '<div class="option-item">
                                         <i class="fas fa-parking"></i>
                                         <span>Parking privé</span>
                                       </div>';
                             }
-                            if ($row['handi'] == 1) {
+                            if (!empty($row['handi']) && $row['handi'] == 1) {
                                 echo '<div class="option-item">
                                         <i class="fas fa-wheelchair"></i>
                                         <span>Accessible PMR</span>
                                       </div>';
                             }
-                            if ($row['priere'] == 1) {
+                            if (!empty($row['priere']) && $row['priere'] == 1) {
                                 echo '<div class="option-item">
                                         <i class="fas fa-mosque"></i>
                                         <span>Salle de prière</span>
                                       </div>';
                             }
-                            if ($row['private'] == 1) {
-                                echo '<div class="option-item">
+                            if (!empty($row['private']) && $row['private'] == 1) {
+                                echo '<div class="option-item">'
                                         <i class="fas fa-door-closed"></i>
                                         <span>Salons privés</span>
                                       </div>';
