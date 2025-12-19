@@ -1,30 +1,42 @@
 <?php
 
 // ===== CONNEXION PDO (existante) =====
-$dsn = 'mysql:host=localhost;dbname=lebonresto;charset=utf8mb4';  // ← AJOUT DE charset=utf8mb4
-$user = 'sam';
-$password = '123';
+// Utiliser les variables d'environnement si disponibles, sinon basculer sur des valeurs de secours
+$dbHost = getenv('DB_HOST') ?: 'localhost';
+$dbName = getenv('DB_NAME') ?: 'lebonresto';
+$dbUser = getenv('DB_USER') ?: 'sam';
+$dbPass = getenv('DB_PASS') ?: '123';
+$dbCharset = getenv('DB_CHARSET') ?: 'utf8mb4';
+
+$dsn = "mysql:host={$dbHost};dbname={$dbName};charset={$dbCharset}";
 
 try {
-    $dbh = new PDO($dsn, $user, $password, [
+    $dbh = new PDO($dsn, $dbUser, $dbPass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"  // ← AJOUT
+        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$dbCharset} COLLATE {$dbCharset}_unicode_ci"
     ]);
-        $dbh->exec("SET CHARACTER SET utf8mb4");
+    $dbh->exec("SET CHARACTER SET {$dbCharset}");
 
 } catch (PDOException $e) {
-    echo 'Échec lors de la connexion : ' . $e->getMessage();
+    // Message d'erreur minimal pour ne pas divulguer d'infos sensibles
+    error_log('DB PDO connection failed: ' . $e->getMessage());
+    echo 'Échec lors de la connexion BDD.';
 }
 
 // ===== CONNEXION MySQLi (pour le panel admin) =====
-$conn = new mysqli('localhost', 'sam', '123', 'lebonresto');
+$mysqliHost = $dbHost;
+$mysqliUser = $dbUser;
+$mysqliPass = $dbPass;
+$mysqliDb   = $dbName;
+
+$conn = new mysqli($mysqliHost, $mysqliUser, $mysqliPass, $mysqliDb);
 
 if ($conn->connect_error) {
     die("Erreur de connexion MySQLi : " . $conn->connect_error);
 }
 
 // Définir l'encodage UTF-8 (une seule fois suffit)
-$conn->set_charset("utf8mb4");
+$conn->set_charset($dbCharset);
 
 ?>

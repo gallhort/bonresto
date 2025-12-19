@@ -1,13 +1,24 @@
 <?php
 
 class Database {
-    private $host = "localhost";
-    private $username = "sam";
-    private $password = "123";
-    private $db = "lebonresto";
+    // Utiliser les variables d'environnement si présentes (fallback aux valeurs existantes)
+    private $host = null;
+    private $username = null;
+    private $password = null;
+    private $db = null;
+
+    function __construct() {
+        $this->host = getenv('DB_HOST') ?: 'localhost';
+        $this->username = getenv('DB_USER') ?: 'sam';
+        $this->password = getenv('DB_PASS') ?: '123';
+        $this->db = getenv('DB_NAME') ?: 'lebonresto';
+    }
 
     function connect() {
         $cnn = mysqli_connect($this->host, $this->username, $this->password, $this->db);
+        if ($cnn && !mysqli_set_charset($cnn, 'utf8mb4')) {
+            // fallback silently
+        }
         return $cnn;
     }
 
