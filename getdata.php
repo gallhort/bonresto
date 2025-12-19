@@ -3,6 +3,7 @@
         <?php
 
             include_once __DIR__ . '/connect.php';
+require_once __DIR__ . '/classes/DatabasePDO.php';
 
 if(isset($_GET['type'])){
 
@@ -29,15 +30,24 @@ if(isset($_GET['type'])){
 
 
 // Construire la requête en échappant les valeurs non numériques
-            $typeEsc = $conn->real_escape_string($type);
+            // Initialize PDO wrapper
+            try {
+                $dbw = new DatabasePDO();
+            } catch (Exception $e) {
+                error_log('getdata: DB init failed: ' . $e->getMessage());
+                echo json_encode([]);
+                exit;
+            }
 
             // Expression de distance (Haversine-like) - lat/lon insérés comme nombres (casts faits ci-dessus)
             $distanceExpr = "(((acos(sin((".$lat."*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((".$lat."*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((".$lon."- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344)";
 
-            if($typeEsc === 'Tous'){
-                $requete = "SELECT {$distanceExpr} as distance, gps, v.nom,type,adresse,codePostal,descriptif,ville FROM vendeur v JOIN options o on v.Nom=o.Nom WHERE {$distanceExpr} <= " . $radius;
+            $params = ['radius' => $radius];
+            if($type === 'Tous'){
+                $requete = "SELECT {$distanceExpr} as distance, gps, v.nom,type,adresse,codePostal,descriptif,ville FROM vendeur v JOIN options o on v.Nom=o.Nom WHERE {$distanceExpr} <= :radius";
             } else {
-                $requete = "SELECT {$distanceExpr} as distance, gps, v.nom,type,adresse,codePostal,descriptif,ville FROM vendeur v JOIN options o on v.Nom=o.Nom WHERE {$distanceExpr} <= " . $radius . " AND v.Type='" . $typeEsc . "'";
+                $requete = "SELECT {$distanceExpr} as distance, gps, v.nom,type,adresse,codePostal,descriptif,ville FROM vendeur v JOIN options o on v.Nom=o.Nom WHERE {$distanceExpr} <= :radius AND v.Type = :type";
+                $params['type'] = $type;
             }
 
 
@@ -69,32 +79,19 @@ if(isset($_GET['type'])){
                 default:
                     $requete .= " LIMIT {$start}, {$nb} ";
             }
-            
 
-            // $conn is provided by connect.php
-            if (!isset($conn) || $conn->connect_error) {
-                die('Erreur de connexion BDD.');
+            $rows = $dbw->fetchAll($requete, $params);
+            $result = [];
+
+            foreach ($rows as $ligne) {
+                $arraybuf = ['gps'=>$ligne['gps'],'nom'=>$ligne['nom'],'type'=>$ligne['type'],
+                    'adresse'=>$ligne['adresse'],'codePostal'=>$ligne['codePostal'],'descriptif'=>$ligne['descriptif'],'ville'=>$ligne['ville']];
+
+                $result[] = $arraybuf;
             }
 
-        $resultat=mysqli_query($conn,$requete);
-            $arraybuf=array();
-        $result=array();
-
-        // pour chaque élément renvoyé par ma requete sql je créé un tab de tab 
-        // pour pouvoir renvoyer un resultat avec le format attendu par
-    		while ($ligne = $resultat -> fetch_assoc()) {
-
-          $arraybuf=array('gps'=>$ligne['gps'],'nom'=>$ligne['nom'],'type'=>$ligne['type'],
-          'adresse'=>$ligne['adresse'],'codePostal'=>$ligne['codePostal'],'descriptif'=>$ligne['descriptif'],'ville'=>$ligne['ville']);
-
-
-
-         array_push($result,$arraybuf);
-               }
-               echo json_encode($result);
-
-
-            }elseif(isset($_POST['nom'])){
+            echo json_encode($result);
+            } elseif (isset($_POST['nom'])) {
                 $nom = trim($_POST['nom'] ?? '');
 
                 // Utiliser la connexion centralisée
