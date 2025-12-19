@@ -508,10 +508,7 @@ $compt=0;
 	$location = $stats['location'] ?? 0;
 	$price = $stats['price'] ?? 0;
 	$nbComment = $stats['nbComment'] ?? 0;
-    FROM vendeur v
-    LEFT JOIN options o ON v.Nom = o.Nom 
-    LEFT JOIN photos p ON v.Nom = p.Nom 
-    WHERE v.Nom = :nom LIMIT 1";
+$query = "SELECT v.*, o.*, p.* FROM vendeur v LEFT JOIN options o ON v.Nom = o.Nom LEFT JOIN photos p ON v.Nom = p.Nom WHERE v.Nom = :nom LIMIT 1";
 
 $row = $dbw->fetch($query, ['nom' => $nom]) ?: [];
 
@@ -1324,10 +1321,10 @@ function openGallery(index) {
                     $regimes = $dbw->fetchAll("SELECT * from regime r JOIN vendeur v on r.Nom=v.Nom WHERE r.NOM = :nom", ['nom' => $nom]);
                     foreach ($regimes as $row) {
                         if (!empty($row['style'])) {
-                            echo '<div class="certification-badge'>
-                                    <i class="fas fa-certificate"></i>
-                                    <div class="certification-info">
-                                        <h4>Restaurant ' . ucfirst($row['style']) . '</h4>';
+                            echo '<div class="certification-badge">'
+                                    . '<i class="fas fa-certificate"></i>'
+                                    . '<div class="certification-info">'
+                                    . '<h4>Restaurant ' . ucfirst($row['style']) . '</h4>';
                             if ($row['style'] == 'halal' || $row['style'] == 'casher') {
                                 echo '<p>Certifié par : ' . htmlspecialchars($row['cert']) . '</p>';
                             }
@@ -1368,10 +1365,7 @@ function openGallery(index) {
                                       </div>';
                             }
                             if (!empty($row['private']) && $row['private'] == 1) {
-                                echo '<div class="option-item">'
-                                        <i class="fas fa-door-closed"></i>
-                                        <span>Salons privés</span>
-                                      </div>';
+                                echo '<div class="option-item">\n                                        <i class="fas fa-door-closed"></i>\n                                        <span>Salons privés</span>\n                                      </div>';
                             }
                             if ($row['voiturier'] == 1) {
                                 echo '<div class="option-item">
