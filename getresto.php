@@ -6,36 +6,43 @@ $servername = 'localhost';
 $username = 'sam';
 $password = '123';
 $db='appsam';
-$nom=$_POST['nom'];
-//je récupère le nom et les coordonnées gps dans la base vendeur
-$requete="SELECT gps, nom,type,adresse,codePostal,descriptif,ville FROM vendeur WHERE nom ='$nom' ";
-
-//On établit la connexion
-$conn = new mysqli($servername, $username, $password,$db);
-
-//On vérifie la connexion
-if($conn->connect_error){
-    die('Erreur : ' .$conn->connect_error);
+$nom = trim($_POST['nom'] ?? '');
+if ($nom === '') {
+    // Pas de nom fourni → renvoyer un tableau vide
+    echo json_encode([]);
+    exit;
 }
 
-$resultat=mysqli_query($conn,$requete);
-$arraybuf=array();
-$result=array();
+//On établit la connexion
+$conn = new mysqli($servername, $username, $password, $db);
 
-// pour chaque élément renvoyé par ma requete sql je créé un tab de tab 
-// pour pouvoir renvoyer un resultat avec le format attendu par
-while ($ligne = $resultat -> fetch_assoc()) {
+//On vérifie la connexion
+if ($conn->connect_error) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Erreur de connexion']);
+    exit;
+}
+$conn->set_charset('utf8mb4');
 
-$arraybuf=array('gps'=>$ligne['gps'],'nom'=>$ligne['nom'],'type'=>$ligne['type'],
-'adresse'=>$ligne['adresse'],'codePostal'=>$ligne['codePostal'],'descriptif'=>$ligne['descriptif'],'ville'=>$ligne['ville']);
+// Requête préparée pour éviter l'injection SQL
+$stmt = $conn->prepare("SELECT gps, nom, type, adresse, codePostal, descriptif, ville FROM vendeur WHERE nom = ?");
+$stmt->bind_param('s', $nom);
+$stmt->execute();
+$resultSet = $stmt->get_result();
+$result = [];
+while ($ligne = $resultSet->fetch_assoc()) {
+    $result[] = [
+        'gps' => $ligne['gps'],
+        'nom' => $ligne['nom'],
+        'type' => $ligne['type'],
+        'adresse' => $ligne['adresse'],
+        'codePostal' => $ligne['codePostal'],
+        'descriptif' => $ligne['descriptif'],
+        'ville' => $ligne['ville']
+    ];
+}
 
-
-
-array_push($result,$arraybuf);
-   }
-
-
-   echo json_encode($result);
+echo json_encode($result);
 
 ?>
 

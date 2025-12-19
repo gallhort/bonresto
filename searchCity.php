@@ -19,7 +19,7 @@ if ($conn->connect_error) {
     exit;
 }
 
-$conn->set_charset("utf8");
+$conn->set_charset("utf8mb4");
 
 $query = isset($_GET['q']) ? trim($_GET['q']) : '';
 
@@ -28,30 +28,24 @@ if (strlen($query) < 2) {
     exit;
 }
 
-$query = mysqli_real_escape_string($conn, $query);
-
-// CORRECTION : Utiliser algeria_cities au lieu de city
-$sql = "SELECT 
-            commune_name_ascii, 
-            daira_name_ascii, 
-            wilaya_name_ascii,
-            gps
-        FROM algeria_cities 
-        WHERE commune_name_ascii LIKE '%{$query}%' 
-           OR daira_name_ascii LIKE '%{$query}%'
-           OR wilaya_name_ascii LIKE '%{$query}%'
+// Utiliser une requête préparée pour le LIKE
+$sql = "SELECT commune_name_ascii, daira_name_ascii, wilaya_name_ascii, gps
+        FROM algeria_cities
+        WHERE commune_name_ascii LIKE ?
+           OR daira_name_ascii LIKE ?
+           OR wilaya_name_ascii LIKE ?
         ORDER BY commune_name_ascii ASC
         LIMIT 10";
 
-$result = mysqli_query($conn, $sql);
+$stmt = $conn->prepare($sql);
+$param = "%" . $query . "%";
+$stmt->bind_param('sss', $param, $param, $param);
+$stmt->execute();
+$result = $stmt->get_result();
 
-if (!$result) {
+if ($result === false) {
     http_response_code(500);
-    echo json_encode([
-        'error' => 'Erreur SQL',
-        'message' => mysqli_error($conn),
-        'sql' => $sql
-    ]);
+    echo json_encode(['error' => 'Erreur SQL']);
     mysqli_close($conn);
     exit;
 }

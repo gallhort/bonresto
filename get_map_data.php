@@ -20,7 +20,16 @@ $radius = (int)($_GET['radius'] ?? 10);
 $type = $_GET['type'] ?? 'Tous';
 $start = (int)($_GET['start'] ?? 0);
 $nb = (int)($_GET['nb'] ?? 1000);
-$options = isset($_GET['options']) ? unserialize(base64_decode($_GET['options'])) : null;
+$options = null;
+if (!empty($_GET['options'])) {
+    $decoded = base64_decode($_GET['options'], true);
+    if ($decoded !== false) {
+        $un = @unserialize($decoded);
+        if (is_array($un)) {
+            $options = array_filter($un, function($v){ return preg_match('/^[A-Za-z0-9_]+$/', $v); });
+        }
+    }
+}
 
 // Parser les coordonnées GPS
 $gpsArray = explode(',', $currentgps);
@@ -29,13 +38,15 @@ if (count($gpsArray) != 2) {
     exit;
 }
 
-$geoc = [
-    'lat' => trim($gpsArray[0]),
-    'lon' => trim($gpsArray[1])
-];
+$lat = (float) trim($gpsArray[0]);
+$lon = (float) trim($gpsArray[1]);
+// Clamp radius and nb
+$radius = max(0, min(200, (int)$radius));
+$start = max(0, (int)$start);
+$nb = max(1, min(1000, (int)$nb));
 
 // Formule de distance
-$distanceFormula = "(((acos(sin((" . $geoc['lat'] . "*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((" . $geoc['lat'] . "*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((" . $geoc['lon'] . "- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344)";
+$distanceFormula = "(((acos(sin((" . $lat . "*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((" . $lat . "*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((" . $lon . "- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344)";
 
 // Construire la requête
 if ($type == 'Tous') {
@@ -56,11 +67,12 @@ if ($type == 'Tous') {
         AND v.Type = '{$type_escaped}'";
 }
 
-// Ajouter les options
-if (isset($options) && is_array($options)) {
+// Ajouter les options (validation stricte)
+if (!empty($options) && is_array($options)) {
     foreach ($options as $val) {
-        $val = mysqli_real_escape_string($conn, $val);
-        $requete .= " AND o.{$val} = '1'";
+        if (preg_match('/^[A-Za-z0-9_]+$/', $val)) {
+            $requete .= " AND o.`" . $val . "` = '1'";
+        }
     }
 }
 

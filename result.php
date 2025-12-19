@@ -67,14 +67,17 @@ if (isset($_POST['adresse'])) {
 
 // ===== PARSER LES COORDONNÉES GPS =====
 $gpsArray = explode(',', $currentgps);
-if (count($gpsArray) != 2 || empty(trim($gpsArray[0])) || empty(trim($gpsArray[1]))) {
+if (count($gpsArray) != 2 || !is_numeric(trim($gpsArray[0])) || !is_numeric(trim($gpsArray[1]))) {
     die("Erreur : Coordonnées GPS invalides. GPS reçu : " . htmlspecialchars($currentgps));
 }
 
 $geoc = [
-    'lat' => trim($gpsArray[0]),
-    'lon' => trim($gpsArray[1])
+    'lat' => (float) trim($gpsArray[0]),
+    'lon' => (float) trim($gpsArray[1])
 ];
+
+// Normaliser et limiter le rayon
+$radius = max(0, min(200, (float)$radius));
 
 // ===== CONNEXION BDD =====
 $conn = new mysqli($servername, $username, $password, $db);
@@ -105,8 +108,9 @@ $req = "SELECT COUNT(*) AS nbre FROM vendeur v
 
 if (isset($options)) {
         foreach ($options as $val) {
-            $val = mysqli_real_escape_string($conn, $val);
-            $req .= " AND o.{$val} = '1'";
+            if (preg_match('/^[A-Za-z0-9_]+$/', $val)) {
+                $req .= " AND o.`" . $val . "` = '1'";
+            }
         }
     }
 } else {
@@ -118,8 +122,9 @@ $req = "SELECT COUNT(*) AS nbre FROM vendeur v
             
     if (isset($options)) {
         foreach ($options as $val) {
-            $val = mysqli_real_escape_string($conn, $val);
-            $req .= " AND o.{$val} = '1'";
+            if (preg_match('/^[A-Za-z0-9_]+$/', $val)) {
+                $req .= " AND o.`" . $val . "` = '1'";
+            }
         }
     }
 }

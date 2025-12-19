@@ -9,54 +9,69 @@
 
 if(isset($_GET['type'])){
 
-            $radius=$_GET['radius'];
-            $type=$_GET['type'];
-            $start=$_GET['start'];
-            $nb=$_GET['nb'];
-            $lat=$_GET['lat'];
-            $lon=$_GET['lon'];
-            $tri=$_GET['tri'];
-            $mOptions= unserialize( base64_decode( $_GET['mOptions'] ) );
+            $radius = isset($_GET['radius']) ? (float)$_GET['radius'] : 10.0;
+            $type = isset($_GET['type']) ? trim($_GET['type']) : 'Tous';
+            $start = isset($_GET['start']) ? max(0, (int)$_GET['start']) : 0;
+            $nb = isset($_GET['nb']) ? (int)$_GET['nb'] : 20;
+            $nb = max(1, min(100, $nb));
+            $lat = isset($_GET['lat']) ? (float)$_GET['lat'] : 0.0;
+            $lon = isset($_GET['lon']) ? (float)$_GET['lon'] : 0.0;
+            $tri = isset($_GET['tri']) ? (int)$_GET['tri'] : 0;
+            // Sécuriser mOptions (ne pas unserialiser aveuglément)
+            $mOptions = null;
+            if (!empty($_GET['mOptions'])) {
+                $decoded = base64_decode($_GET['mOptions'], true);
+                if ($decoded !== false) {
+                    $un = @unserialize($decoded);
+                    if (is_array($un)) {
+                        $mOptions = array_filter($un, function($v){ return preg_match('/^[A-Za-z0-9_]+$/', $v); });
+                    }
+                }
+            }
             //je récupère le nom et les coordonnées gps dans la base vendeur
 
 
-// Je dois ajouter le tri pour que les marqkers correspondent a la liste des restos
+// Construire la requête en échappant les valeurs non numériques
+            $typeEsc = $conn->real_escape_string($type);
 
-            if($type=='Tous'){ $requete = "SELECT (((acos(sin((" . $lat . "*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((" . $lat . "*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((" 
-                . $lon . "- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344) as distance,  gps, v.nom,type,adresse,codePostal,descriptif,ville FROM vendeur v JOIN options o on v.Nom=o.Nom WHERE (((acos(sin((" . $lat . "*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((" . $lat . "*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((" . $lon . "- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344) <= " 
-                . $radius;
-            }else{ $requete = "SELECT (((acos(sin((" . $lat . "*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((" . $lat . "*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((" 
-                . $lon . "- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344) as distance,  gps, v.nom,type,adresse,codePostal,descriptif,ville FROM vendeur v JOIN options o on v.Nom=o.Nom WHERE (((acos(sin((" . $lat . "*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((" . $lat . "*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((" . $lon . "- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344) <= " . $radius
-                ." AND Type='$type' ";}
+            // Expression de distance (Haversine-like) - lat/lon insérés comme nombres (casts faits ci-dessus)
+            $distanceExpr = "(((acos(sin((".$lat."*pi()/180)) * sin((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) + cos((".$lat."*pi()/180)) * cos((SUBSTRING_INDEX(gps, ',', 1)*pi()/180)) * cos(((".$lon."- SUBSTRING_INDEX(gps, ',', -1)) * pi()/180)))) * 180/pi()) * 60 * 1.1515 * 1.609344)";
 
-                                if (isset($tri) || isset($tri)  || isset($tri) ) {
-                                    if($mOptions!=NULL){             
-                                foreach ($mOptions as $val){
+            if($typeEsc === 'Tous'){
+                $requete = "SELECT {$distanceExpr} as distance, gps, v.nom,type,adresse,codePostal,descriptif,ville FROM vendeur v JOIN options o on v.Nom=o.Nom WHERE {$distanceExpr} <= " . $radius;
+            } else {
+                $requete = "SELECT {$distanceExpr} as distance, gps, v.nom,type,adresse,codePostal,descriptif,ville FROM vendeur v JOIN options o on v.Nom=o.Nom WHERE {$distanceExpr} <= " . $radius . " AND v.Type='" . $typeEsc . "'";
+            }
 
-                            $requete .=" AND $val=1";
 
+                                    if(!empty($mOptions)){
+                                foreach($mOptions as $val){
+                                    // $val validé par regex ci-dessus
+                                    $requete .= " AND o.`".$val."`=1";
                                 }
                                 }
 
 
-                                     switch ($tri) {
-                                         case 1:
-                                             $requete .= "  ORDER BY nom ASC LIMIT {$start}, {$nb}  ";
-                                             break;
-                                         case 2:
+                                             
+
                           
                           
                           
                           
                           
                           
-                                            $requete .= " ORDER BY distance ASC LIMIT {$start}, {$nb}  ";
-                                             break;
-                                             case 3:
-                                                $requete .= " LIMIT {$start}, {$nb}  ";
-                                                break;
-                                     }
-                                 } else  $requete .= " LIMIT {$start}, {$nb}";
+
+                                             
+            switch ($tri) {
+                case 1:
+                    $requete .= " ORDER BY v.nom ASC LIMIT {$start}, {$nb} ";
+                    break;
+                case 2:
+                    $requete .= " ORDER BY distance ASC LIMIT {$start}, {$nb} ";
+                    break;
+                default:
+                    $requete .= " LIMIT {$start}, {$nb} ";
+            }
             
 
             //On établit la connexion
@@ -86,15 +101,13 @@ if(isset($_GET['type'])){
 
 
             }elseif(isset($_POST['nom'])){
-            $nom=$_POST['nom'];
+                $nom = trim($_POST['nom'] ?? '');
 
-                $dbh = new PDO('mysql:host=localhost;dbname=lebonresto', "sam", "123");
+                $dbh = new PDO('mysql:host=localhost;dbname=lebonresto', "sam", "123", [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
-                foreach($dbh->query("SELECT * from vendeur v JOIN photos p on v.Nom=p.Nom JOIN regime r on r.Nom=v.Nom JOIN options o on o.Nom=v.Nom WHERE r.NOM='$nom'") as $ligne) {
-
-                    $result=$ligne;
-
-                }
+                $stmt = $dbh->prepare("SELECT * from vendeur v JOIN photos p on v.Nom=p.Nom JOIN regime r on r.Nom=v.Nom JOIN options o on o.Nom=v.Nom WHERE r.NOM = ?");
+                $stmt->execute([$nom]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
                 echo json_encode($result);
             }elseif(isset($_POST['options'])){

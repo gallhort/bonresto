@@ -41,8 +41,10 @@ if ($conn->connect_error) {
 $conn->set_charset("utf8mb4");
 
 // FORMULE DE DISTANCE (Haversine corrigée - retourne les km)
-$lat1 = $geoc['lat'];
-$lon1 = $geoc['lon'];
+$lat1 = (float)$geoc['lat'];
+$lon1 = (float)$geoc['lon'];
+// Clamp radius to a reasonable maximum (e.g., 200 km) and ensure numeric
+$radius = max(0, min(200, (float)$radius));
 $distanceFormula = "( 6371 * acos( cos( radians(" . $lat1 . ") ) * cos( radians( SUBSTRING_INDEX(gps, ',', 1) ) ) * cos( radians( SUBSTRING_INDEX(gps, ',', -1) ) - radians(" . $lon1 . ") ) + sin( radians(" . $lat1 . ") ) * sin( radians( SUBSTRING_INDEX(gps, ',', 1) ) ) ) )";
 
 // ============ FONCTIONS ============

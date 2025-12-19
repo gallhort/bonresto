@@ -11,31 +11,24 @@
 
             //On établit la connexion
             $conn = new mysqli($servername, $username, $password,$db);
-            $conn->set_charset("utf8"); // <- important
+            $conn->set_charset("utf8mb4"); // charset plus complet
 
-            
             //On vérifie la connexion
             if($conn->connect_error){
-                die('Erreur : ' .$conn->connect_error);
+                http_response_code(500);
+                echo json_encode(['error' => 'Erreur de connexion']);
+                exit;
             }
 
-        $resultat=mysqli_query($conn,$requete);
-            $arraybuf=array();
-        $result=array();
+$resultat = $conn->query($requete);
+            $result = [];
+            if ($resultat && $resultat->num_rows > 0) {
+                while ($ligne = $resultat->fetch_assoc()) {
+                    $result[] = ['type' => $ligne['type']];
+                }
+            }
 
-        // pour chaque élément renvoyé par ma requete sql je créé un tab de tab 
-        // pour pouvoir renvoyer un resultat avec le format attendu par
-    		while ($ligne = $resultat -> fetch_assoc()) {
-
-          $arraybuf=array('type'=>$ligne['type']);
-
- 
-
-         array_push($result,$arraybuf);
-               }
-
-
-               echo json_encode($result);
+            echo json_encode($result);
          ?>
 
 
