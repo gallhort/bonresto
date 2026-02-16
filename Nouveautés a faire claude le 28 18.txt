@@ -1,0 +1,46 @@
+🍽️ PROMPT - Projet LeBonResto (Algérie)
+Contexte
+Plateforme de recherche de restaurants en Algérie, style TripAdvisor.
+
+Base de données : lebonresto (4).sql
+Chemin projet : /home/claude/lebonresto/
+
+
+✅ Fonctionnalités terminées
+
+Autocomplete global style TripAdvisor (API /api/search/autocomplete)
+Hero homepage avec photos restaurants/wilayas
+Recherche par paramètre ?q=xxx
+Filtres fonctionnels : type cuisine, prix, note, distance (radius)
+Tris : pertinence, distance, note, prix croissant/décroissant
+Filtre prix corrigé (utilise buildUrl, persiste au changement de filtre)
+Pagination : 20 restaurants par page avec navigation (Précédent, 1, 2, 3..., Suivant)
+Carte : affiche TOUS les restaurants de la recherche (pas seulement la page courante)
+
+$restaurants = liste paginée (20/page)
+$mapRestaurants = tous les restaurants pour la carte
+
+
+
+
+📁 Fichiers principaux
+
+/app/Controllers/RestaurantController.php - getRestaurants($filters, $forMap)
+/app/Views/restaurants/search.php - Vue recherche avec pagination + carte
+/config/routes.php - Routes API
+
+
+🔜 Prochaines fonctionnalités potentielles
+
+ Bouton "Actualiser en déplaçant la carte" (style TripAdvisor)
+ Filtre par Wilaya (58 wilayas)
+ Amélioration UX mobile
+ Autres...
+
+
+⚠️ Points d'attention
+
+Utiliser des placeholders ? (pas :param nommés) pour éviter erreurs PDO
+Ne pas casser les fonctionnalités existantes - faire une feature à la fois
+La carte utilise mapRestaurants, la liste utilise restaurants
+buildUrl() reset automatiquement page à 1 quand un filtre change

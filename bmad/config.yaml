@@ -1,0 +1,28 @@
+# BMAD Method v6 - Project Configuration
+# LeBonResto - Plateforme d'avis restaurants en Algerie
+
+project_name: "LeBonResto"
+project_type: "web-app"
+project_level: 3  # 12-40 stories expected across all features
+
+# Output Settings
+output_folder: "docs"
+
+# Project Context
+description: "Plateforme d'avis restaurants en Algerie (type TripAdvisor/TheFork) avec PHP MVC custom, MySQL, XAMPP"
+stack:
+  - PHP 8.x (custom MVC framework)
+  - MySQL (PDO, named params only)
+  - JavaScript (vanilla)
+  - Leaflet (maps)
+  - Chart.js
+  - XAMPP (local dev)
+
+# Constraints
+constraints:
+  - "Pas d'IA payante (templates + NLP basique sauf Google Vision optionnel)"
+  - "PDO UNIQUEMENT named params (:param), JAMAIS positional (?)"
+  - "CSRF verify_csrf() sur TOUS les POST"
+  - "CacheService file-based (pas de Redis)"
+  - "Session-based auth (bcrypt)"
+  - "Pas de framework (custom MVC)"

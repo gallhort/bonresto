@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Lightbox</title>
+    <style>
+        .review-photo-item {
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
+            border: 2px solid #ccc;
+            display: inline-block;
+            margin: 10px;
+        }
+        .review-photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .lightbox.active {
+            display: flex;
+        }
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Lightbox - Restaurant 111</h1>
+    
+    <div class="review-card" data-review-id="64">
+        <h3>Avis avec photo</h3>
+        <div class="review-photos">
+            <div class="review-photo-item" onclick="openLightbox(64, 0)" data-review-id="64" data-photo-index="0">
+                <img loading="lazy" src="/uploads/reviews/2025/12/64/photo_694c8b6636cbc5.66366325.webp" alt="Photo test">
+            </div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">✕ Fermer</button>
+        <img loading="lazy" id="lightboxImage" src="" alt="Photo">
+    </div>
+
+    <script>
+        console.log('🔵 Script chargé');
+        
+        let currentLightboxPhotos = [];
+        
+        function openLightbox(reviewId, photoIndex) {
+            console.log('🖼️ openLightbox appelée - Review:', reviewId, 'Photo:', photoIndex);
+            
+            // Récupérer la carte de l'avis
+            const reviewCard = document.querySelector('[data-review-id="' + reviewId + '"]');
+            console.log('📦 Review card:', reviewCard);
+            
+            if (!reviewCard) {
+                alert('❌ Review card introuvable !');
+                return;
+            }
+            
+            // Récupérer les photos
+            const photos = reviewCard.querySelectorAll('.review-photo-item img');
+            console.log('📸 Photos trouvées:', photos.length);
+            
+            if (photos.length === 0) {
+                alert('❌ Aucune photo trouvée !');
+                return;
+            }
+            
+            currentLightboxPhotos = Array.from(photos).map(function(img) {
+                return img.src;
+            });
+            
+            console.log('📸 URLs photos:', currentLightboxPhotos);
+            
+            // Afficher la lightbox
+            document.getElementById('lightboxImage').src = currentLightboxPhotos[photoIndex];
+            document.getElementById('lightbox').classList.add('active');
+            
+            console.log('✅ Lightbox ouverte !');
+        }
+        
+        function closeLightbox() {
+            console.log('❌ Lightbox fermée');
+            document.getElementById('lightbox').classList.remove('active');
+        }
+        
+        // Test au chargement
+        console.log('🧪 typeof openLightbox:', typeof openLightbox);
+        console.log('✅ Tout est prêt ! Clique sur la photo.');
+    </script>
+</body>
+</html>

@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>🔥 HEAT - Jeu de Couple</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a0000 0%, #4a0000 50%, #1a0000 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        .fire-particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #ff6b35 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 3s ease-in infinite;
+            z-index: 1;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .logo h1 {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff6b35, #ff0055, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(255, 107, 53, 0.5);
+            letter-spacing: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .logo p {
+            font-size: 14px;
+            color: #ff9999;
+            margin-top: 10px;
+            letter-spacing: 3px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ffcccc;
+            font-weight: 600;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff6b35;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+        }
+        
+        .level-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        
+        .level-btn {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .level-btn:hover {
+            background: rgba(255, 107, 53, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .level-btn.active {
+            background: linear-gradient(135deg, #ff6b35, #ff0055);
+            border-color: #ff6b35;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
+        }
+        
+        .level-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .level-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #ff6b35, #ff0055);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.4);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(255, 107, 53, 0.6);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+            margin-top: 12px;
+        }
+        
+        .challenge-card {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 0, 85, 0.1));
+            border: 2px solid rgba(255, 107, 53, 0.4);
+            border-radius: 20px;
+            padding: 32px;
+            margin: 32px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            animation: flipIn 0.6s ease;
+        }
+        
+        @keyframes flipIn {
+            from { transform: rotateY(90deg); opacity: 0; }
+            to { transform: rotateY(0); opacity: 1; }
+        }
+        
+        .challenge-level {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 32px;
+        }
+        
+        .challenge-type {
+            font-size: 12px;
+            color: #ffcccc;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        .challenge-text {
+            font-size: 22px;
+            line-height: 1.6;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        
+        .challenge-player {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6b35, #ff0055);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            margin: 0 4px;
+        }
+        
+        .timer {
+            display: none;
+            font-size: 48px;
+            font-weight: 900;
+            color: #ff6b35;
+            margin: 24px 0;
+            text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+        }
+        
+        .timer.active {
+            display: block;
+            animation: timerPulse 1s ease infinite;
+        }
+        
+        @keyframes timerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b35, #ff0055);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: #ffcccc;
+            margin-bottom: 8px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: #ff6b35;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #ffcccc;
+            margin-top: 4px;
+        }
+        
+        .minigame {
+            display: none;
+            text-align: center;
+            padding: 32px 0;
+        }
+        
+        .minigame.active {
+            display: block;
+        }
+        
+        .rps-choices {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 32px 0;
+        }
+        
+        .rps-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            font-size: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .rps-btn:hover {
+            background: rgba(255, 107, 53, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .rps-result {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 24px;
+            min-height: 40px;
+        }
+        
+        .wheel-container {
+            display: none;
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .wheel-container.active {
+            display: block;
+        }
+        
+        .wheel {
+            width: 280px;
+            height: 280px;
+            margin: 20px auto;
+            position: relative;
+            border-radius: 50%;
+            border: 8px solid #ff6b35;
+            box-shadow: 0 0 40px rgba(255, 107, 53, 0.6);
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        }
+        
+        .wheel-sector {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .wheel-pointer {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 30px solid #ff0055;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            filter: drop-shadow(0 0 10px rgba(255, 0, 85, 0.8));
+        }
+        
+        .wheel-result {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 24px;
+            min-height: 60px;
+            color: #ff6b35;
+        }
+        
+        .spin-btn {
+            background: linear-gradient(135deg, #ff6b35, #ff0055);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 16px;
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .spin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(255, 107, 53, 0.6);
+        }
+        
+        .spin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="fireParticles"></div>
+    
+    <div class="container">
+        
+        <div id="homeScreen" class="screen active">
+            <div class="logo">
+                <h1>HEAT</h1>
+                <p>JEU DE COUPLE COQUIN</p>
+            </div>
+            
+            <div class="form-group">
+                <label>👤 Joueur 1 (Homme)</label>
+                <input type="text" id="player1Name" placeholder="Prénom..." maxlength="15">
+            </div>
+            
+            <div class="form-group">
+                <label>👤 Joueur 2 (Femme)</label>
+                <input type="text" id="player2Name" placeholder="Prénom..." maxlength="15">
+            </div>
+            
+            <div class="form-group">
+                <label>🌡️ Niveau de départ</label>
+                <div class="level-selector">
+                    <div class="level-btn active" data-level="1">
+                        <div class="level-icon">🔥</div>
+                        <div class="level-name">Échauffement</div>
+                    </div>
+                    <div class="level-btn" data-level="2">
+                        <div class="level-icon">🔥🔥</div>
+                        <div class="level-name">Épicé</div>
+                    </div>
+                    <div class="level-btn" data-level="3">
+                        <div class="level-icon">🔥🔥🔥</div>
+                        <div class="level-name">Torride</div>
+                    </div>
+                    <div class="level-btn" data-level="4">
+                        <div class="level-icon">🔥🔥🔥🔥</div>
+                        <div class="level-name">Extrême</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="startGame()">🔥 Commencer</button>
+        </div>
+        
+        <div id="gameScreen" class="screen">
+            <div class="progress-text">Défi <span id="currentChallenge">1</span> / <span id="totalChallenges">20</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 5%"></div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="currentLevel">1</div>
+                    <div class="stat-label">Niveau</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">🔥</div>
+                    <div class="stat-label">Intensité</div>
+                </div>
+            </div>
+            
+            <div class="challenge-card" id="challengeCard">
+                <div class="challenge-level" id="challengeLevel">🔥</div>
+                <div class="challenge-type" id="challengeType">ACTION</div>
+                <div class="challenge-text" id="challengeText">Chargement...</div>
+                <div class="timer" id="timer">00:00</div>
+            </div>
+            
+            <div class="minigame" id="minigame">
+                <h3>Pierre - Papier - Ciseaux</h3>
+                <p style="margin: 16px 0; color: #ffcccc;">Jouez pour savoir qui fait le défi !</p>
+                <div class="rps-choices">
+                    <button class="rps-btn" onclick="playRPS('rock')">✊</button>
+                    <button class="rps-btn" onclick="playRPS('paper')">✋</button>
+                    <button class="rps-btn" onclick="playRPS('scissors')">✌️</button>
+                </div>
+                <div class="rps-result" id="rpsResult"></div>
+            </div>
+            
+            <div class="wheel-container" id="wheelContainer">
+                <h3>🎡 Roulette du Kamasutra</h3>
+                <p style="margin: 16px 0; color: #ffcccc;">Faites tourner la roue !</p>
+                <div style="position: relative; width: 280px; margin: 0 auto;">
+                    <div class="wheel-pointer"></div>
+                    <div class="wheel" id="wheel"></div>
+                </div>
+                <button class="spin-btn" id="spinBtn" onclick="spinWheel()">🎡 FAIRE TOURNER</button>
+                <div class="wheel-result" id="wheelResult"></div>
+            </div>
+            
+            <button class="btn" onclick="nextChallenge()">Défi suivant 🔥</button>
+            <button class="btn btn-secondary" onclick="skipChallenge()">Passer</button>
+            <button class="btn btn-secondary" onclick="restartGame()">Recommencer</button>
+        </div>
+        
+    </div>
+    
+    <script>
+        const challenges = {
+            1: [
+                { type: 'ACTION', text: '{p1}, masse les épaules de {p2} pendant 2 minutes', timer: 120 },
+                { type: 'QUESTION', text: '{p1}, complimente 3 parties du corps de {p2}' },
+                { type: 'ACTION', text: '{p2}, embrasse {p1} tendrement pendant 20 secondes', timer: 20 },
+                { type: 'COMMUN', text: 'Regardez-vous dans les yeux sans parler pendant 1 minute', timer: 60 },
+                { type: 'QUESTION', text: '{p1}, dis à {p2} ce qui t\'a fait craquer' },
+                { type: 'ACTION', text: '{p2}, caresse doucement le visage de {p1}' },
+                { type: 'MINIGAME', text: 'Pierre-Papier-Ciseaux pour décider qui domine !' },
+                { type: 'QUESTION', text: '{p1}, quel est ton fantasme avec {p2} ?' },
+                { type: 'ACTION', text: '{p2}, chuchote quelque chose de coquin à {p1}' },
+                { type: 'COMMUN', text: 'Dansez un slow collés pendant 2 minutes', timer: 120 }
+            ],
+            2: [
+                { type: 'ACTION', text: '{p1}, enlève un vêtement de ton choix' },
+                { type: 'ACTION', text: '{p2}, embrasse {p1} passionnément pendant 1 min', timer: 60 },
+                { type: 'QUESTION', text: '{p1}, décris ton meilleur orgasme avec {p2}' },
+                { type: 'ACTION', text: '{p2}, fais un strip-tease pour {p1}', timer: 120 },
+                { type: 'COMMUN', text: 'Explorez une zone érogène pendant 2 min', timer: 120 },
+                { type: 'ACTION', text: '{p1}, lèche le cou de {p2} pendant 30 sec', timer: 30 },
+                { type: 'MINIGAME', text: 'Pierre-Papier-Ciseaux : qui choisit la position ?' },
+                { type: 'ACTION', text: '{p1}, enlève un vêtement de {p2} avec les dents' },
+                { type: 'COMMUN', text: 'Douche ou bain ensemble (5 min)', timer: 300 },
+                { type: 'ACTION', text: '{p2}, bisous partout sauf la bouche (1 min)', timer: 60 }
+            ],
+            3: [
+                { type: 'ACTION', text: '{p1}, déshabille complètement {p2}' },
+                { type: 'ACTION', text: '{p2}, fais plaisir à {p1} avec ta bouche (3 min)', timer: 180 },
+                { type: 'COMMUN', text: 'Position 69 pendant 2 minutes', timer: 120 },
+                { type: 'ACTION', text: '{p1}, utilise tes mains jusqu\'à ce qu\'elle gémisse' },
+                { type: 'QUESTION', text: '{p2}, aimerais-tu du bondage léger ?' },
+                { type: 'ACTION', text: '{p1}, lèche tout le corps de {p2} (3 min)', timer: 180 },
+                { type: 'COMMUN', text: 'Essayez une nouvelle position' },
+                { type: 'ACTION', text: '{p2}, fais jouir {p1} avec ta langue' },
+                { type: 'MINIGAME', text: 'Pierre-Papier-Ciseaux : qui domine 10 min ?' },
+                { type: 'ACTION', text: '{p1}, utilise un glaçon sur {p2}' }
+            ],
+            4: [
+                { type: 'ACTION', text: '{p1}, attache {p2} et fais ce que tu veux (5 min)', timer: 300 },
+                { type: 'COMMUN', text: 'Trouvez le point G de {p2}' },
+                { type: 'ACTION', text: '{p2}, domine {p1} pendant 10 minutes', timer: 600 },
+                { type: 'ACTION', text: '{p1}, fais jouir {p2} 2 fois de suite' },
+                { type: 'ACTION', text: '{p1}, spanking sur {p2} jusqu\'à ce qu\'elle supplie' },
+                { type: 'ACTION', text: '{p2}, fais l\'amour en mode très rough' },
+                { type: 'COMMUN', text: 'Position extrême du yoga sexuel' },
+                { type: 'ACTION', text: '{p1}, fais jouir {p2} devant un miroir' },
+                { type: 'COMMUN', text: 'Marathon : 3 positions sans pause', timer: 900 },
+                { type: 'GAGE', text: 'Regardez-vous sans cligner. Le perdant fait une fellation/cunnilingus (5 min)', timer: 300 },
+                { type: 'GAGE', text: 'Premier qui gémit : attaché et dominé 10 min', timer: 600 },
+                { type: 'WHEEL', text: 'Roulette Kamasutra : tenez la position 5 min !', timer: 300 },
+                { type: 'GAGE', text: 'Combat de langue : qui fait jouir en premier ? Perdant obéit 15 min', timer: 900 },
+                { type: 'ACTION', text: '{p2}, strip-tease lent : {p1} ne peut pas toucher (5 min)', timer: 300 },
+                { type: 'GAGE', text: 'Jeu du silence : premier qui gémit doit donner un orgasme oral' },
+                { type: 'COMMUN', text: 'Position brouette : {p1} tient les jambes de {p2} (2 min)', timer: 120 },
+                { type: 'ACTION', text: '{p1}, glace sur tout le corps puis réchauffe avec ta langue' },
+                { type: 'GAGE', text: 'Pierre-Papier-Ciseaux : perdant fait gorge profonde ou anal' },
+                { type: 'WHEEL', text: 'Roulette : la position tirée jusqu\'à l\'orgasme !' },
+                { type: 'COMMUN', text: 'Debout contre le mur sans pause (10 min)', timer: 600 },
+                { type: 'ACTION', text: '{p2}, lap dance sur {p1} qui a les mains attachées', timer: 180 },
+                { type: 'GAGE', text: 'Concours préliminaires : qui tient le plus longtemps ?' },
+                { type: 'ACTION', text: '{p1}, ligote {p2} et fais-la jouir 3 fois avec un jouet' },
+                { type: 'COMMUN', text: 'Sexe dans le noir, yeux bandés : uniquement au toucher', timer: 600 },
+                { type: 'WHEEL', text: 'Roulette : position finale pour jouir ensemble !' }
+            ]
+        };
+        
+        let gameState = {
+            player1: '', player2: '', currentLevel: 1,
+            currentChallenge: 0, totalChallenges: 20,
+            usedChallenges: [], timerInterval: null
+        };
+        
+        const kamasutraPositions = [
+            '🧘 Le Lotus', '🐕 La Levrette', '🪑 La Chaise',
+            '🦅 L\'Aigle', '🌉 Le Pont', '🦋 Le Papillon',
+            '⛲ La Fontaine', '🌊 La Vague', '🐚 La Perle',
+            '🎯 L\'Archer', '🌙 Le Croissant', '⚓ L\'Ancre'
+        ];
+        
+        let wheelSpinning = false;
+        let currentRotation = 0;
+        
+        function createFireParticles() {
+            const container = document.getElementById('fireParticles');
+            setInterval(() => {
+                const particle = document.createElement('div');
+                particle.className = 'fire-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(particle);
+                setTimeout(() => particle.remove(), 3000);
+            }, 300);
+        }
+        
+        createFireParticles();
+        
+        function initWheel() {
+            const wheel = document.getElementById('wheel');
+            const sectorAngle = 360 / kamasutraPositions.length;
+            const colors = ['#ff6b35', '#ff0055', '#ff8c42', '#ff1744', '#ff5722', '#e91e63'];
+            
+            kamasutraPositions.forEach((position, index) => {
+                const sector = document.createElement('div');
+                sector.className = 'wheel-sector';
+                sector.style.transform = `rotate(${index * sectorAngle}deg)`;
+                sector.style.background = colors[index % colors.length];
+                sector.textContent = position;
+                wheel.appendChild(sector);
+            });
+        }
+        
+        initWheel();
+        
+        document.querySelectorAll('.level-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameState.currentLevel = parseInt(btn.dataset.level);
+            });
+        });
+        
+        function startGame() {
+            const p1 = document.getElementById('player1Name').value.trim();
+            const p2 = document.getElementById('player2Name').value.trim();
+            
+            if (!p1 || !p2) {
+                alert('❌ Entrez les 2 prénoms !');
+                return;
+            }
+            
+            gameState.player1 = p1;
+            gameState.player2 = p2;
+            gameState.currentChallenge = 0;
+            gameState.usedChallenges = [];
+            
+            switchScreen('gameScreen');
+            loadChallenge();
+        }
+        
+        function loadChallenge() {
+            gameState.currentChallenge++;
+            
+            if (gameState.currentChallenge === 6) gameState.currentLevel = 2;
+            if (gameState.currentChallenge === 11) gameState.currentLevel = 3;
+            if (gameState.currentChallenge === 16) gameState.currentLevel = 4;
+            
+            const levelChallenges = challenges[gameState.currentLevel];
+            let challenge;
+            
+            do {
+                challenge = levelChallenges[Math.floor(Math.random() * levelChallenges.length)];
+            } while (gameState.usedChallenges.includes(challenge.text) && gameState.usedChallenges.length < levelChallenges.length);
+            
+            gameState.usedChallenges.push(challenge.text);
+            
+            const levelIcons = { 1: '🔥', 2: '🔥🔥', 3: '🔥🔥🔥', 4: '🔥🔥🔥🔥' };
+            
+            document.getElementById('challengeLevel').textContent = levelIcons[gameState.currentLevel];
+            document.getElementById('challengeType').textContent = challenge.type;
+            
+            let text = challenge.text
+                .replace(/{p1}/g, `<span class="challenge-player">${gameState.player1}</span>`)
+                .replace(/{p2}/g, `<span class="challenge-player">${gameState.player2}</span>`);
+            
+            document.getElementById('challengeText').innerHTML = text;
+            document.getElementById('currentChallenge').textContent = gameState.currentChallenge;
+            document.getElementById('currentLevel').textContent = gameState.currentLevel;
+            
+            const progress = (gameState.currentChallenge / gameState.totalChallenges) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            const timerEl = document.getElementById('timer');
+            const minigameEl = document.getElementById('minigame');
+            const wheelEl = document.getElementById('wheelContainer');
+            
+            timerEl.classList.remove('active');
+            minigameEl.classList.remove('active');
+            wheelEl.classList.remove('active');
+            clearInterval(gameState.timerInterval);
+            
+            if (challenge.timer) {
+                startTimer(challenge.timer);
+            }
+            
+            if (challenge.type === 'MINIGAME') {
+                minigameEl.classList.add('active');
+            }
+            
+            if (challenge.type === 'WHEEL' || challenge.type === 'GAGE') {
+                wheelEl.classList.add('active');
+                document.getElementById('wheelResult').textContent = '';
+            }
+            
+            if (gameState.currentChallenge >= gameState.totalChallenges) {
+                setTimeout(() => {
+                    alert('🔥 FÉLICITATIONS ! Vous méritez une récompense... 😏');
+                    restartGame();
+                }, 1000);
+            }
+        }
+        
+        function startTimer(seconds) {
+            const timerEl = document.getElementById('timer');
+            timerEl.classList.add('active');
+            
+            let remaining = seconds;
+            
+            function updateTimer() {
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                
+                if (remaining <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    timerEl.textContent = '✅ TERMINÉ';
+                    setTimeout(() => timerEl.classList.remove('active'), 2000);
+                }
+                
+                remaining--;
+            }
+            
+            updateTimer();
+            gameState.timerInterval = setInterval(updateTimer, 1000);
+        }
+        
+        function playRPS(playerChoice) {
+            const choices = ['rock', 'paper', 'scissors'];
+            const cpuChoice = choices[Math.floor(Math.random() * 3)];
+            
+            const icons = { rock: '✊', paper: '✋', scissors: '✌️' };
+            
+            let result = '';
+            
+            if (playerChoice === cpuChoice) {
+                result = `Égalité ! Rejouez !`;
+            } else if (
+                (playerChoice === 'rock' && cpuChoice === 'scissors') ||
+                (playerChoice === 'paper' && cpuChoice === 'rock') ||
+                (playerChoice === 'scissors' && cpuChoice === 'paper')
+            ) {
+                result = `🎉 ${gameState.player1} gagne !<br>${icons[playerChoice]} bat ${icons[cpuChoice]}`;
+            } else {
+                result = `🎉 ${gameState.player2} gagne !<br>${icons[cpuChoice]} bat ${icons[playerChoice]}`;
+            }
+            
+            document.getElementById('rpsResult').innerHTML = result;
+        }
+        
+        function spinWheel() {
+            if (wheelSpinning) return;
+            
+            wheelSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('wheelResult').textContent = '';
+            
+            const wheel = document.getElementById('wheel');
+            const spins = 5 + Math.random() * 3;
+            const sectorAngle = 360 / kamasutraPositions.length;
+            const randomSector = Math.floor(Math.random() * kamasutraPositions.length);
+            const finalAngle = (spins * 360) + (randomSector * sectorAngle);
+            
+            currentRotation += finalAngle;
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+            
+            setTimeout(() => {
+                const resultIndex = (kamasutraPositions.length - randomSector) % kamasutraPositions.length;
+                const position = kamasutraPositions[resultIndex];
+                
+                document.getElementById('wheelResult').innerHTML = 
+                    `<strong style="color: #ff6b35;">Position : ${position}</strong><br>` +
+                    `<span style="font-size: 16px; color: #ffcccc;">À vous de jouer ! 🔥</span>`;
+                
+                wheelSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
+            }, 4000);
+        }
+        
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        function nextChallenge() {
+            loadChallenge();
+        }
+        
+        function skipChallenge() {
+            if (confirm('⭐️ Passer ce défi ?')) {
+                loadChallenge();
+            }
+        }
+        
+        function restartGame() {
+            if (confirm('🔄 Recommencer ?')) {
+                gameState = {
+                    player1: '', player2: '', currentLevel: 1,
+                    currentChallenge: 0, totalChallenges: 20,
+                    usedChallenges: [], timerInterval: null
+                };
+                
+                document.getElementById('player1Name').value = '';
+                document.getElementById('player2Name').value = '';
+                
+                document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.level-btn[data-level="1"]').classList.add('active');
+                
+                switchScreen('homeScreen');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+# Sprint Status - F33 Commande en ligne
+# Generated: 2026-02-15
+
+last_updated: "2026-02-15"
+
+sprints:
+  - number: 1
+    name: "Core - Backend + Page commande + Checkout"
+    status: "completed"
+    stories:
+      - id: "STORY-001"
+        title: "Migration SQL + Configuration Restaurant"
+        points: 3
+        status: "completed"
+        document: "docs/stories/STORY-001.md"
+      - id: "STORY-002"
+        title: "Page commande client (menu + panier)"
+        points: 8
+        status: "completed"
+        document: "docs/stories/STORY-002.md"
+      - id: "STORY-003"
+        title: "Soumission de commande (checkout)"
+        points: 8
+        status: "completed"
+        document: "docs/stories/STORY-003.md"
+    total_points: 19
+
+  - number: 2
+    name: "Dashboard owner + Historique + QR + Polish"
+    status: "completed"
+    stories:
+      - id: "STORY-004"
+        title: "Dashboard commandes proprietaire"
+        points: 8
+        status: "completed"
+        document: "docs/stories/STORY-004.md"
+      - id: "STORY-005"
+        title: "Historique commandes client + suivi"
+        points: 5
+        status: "completed"
+        document: "docs/stories/STORY-005.md"
+      - id: "STORY-006"
+        title: "QR Code commande + notifications email"
+        points: 3
+        status: "completed"
+        document: "docs/stories/STORY-006.md"
+      - id: "STORY-007"
+        title: "Integration header + routes + polish"
+        points: 3
+        status: "completed"
+        document: "docs/stories/STORY-007.md"
+    total_points: 19
+
+total_stories: 7
+total_points: 38

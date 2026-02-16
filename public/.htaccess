@@ -1,0 +1,37 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Rediriger tout vers index.php sauf les fichiers existants
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Désactiver l'affichage des erreurs en production
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_flag display_startup_errors Off
+    php_value error_reporting 0
+</IfModule>
+
+# Sécurité
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protection des fichiers sensibles
+<FilesMatch "\.(env|md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Bloquer tous les JSON sauf manifest.json
+<FilesMatch "\.json$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+<Files "manifest.json">
+    Order deny,allow
+    Allow from all
+</Files>

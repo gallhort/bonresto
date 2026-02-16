@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1a0000">
+    <title>🔥 HEAT - Jeu de Couple</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a0000 0%, #4a0000 50%, #1a0000 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .fire-particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #ff6b35 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 3s ease-in infinite;
+            z-index: 1;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+        }
+        
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .logo h1 {
+            font-size: 56px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff6b35, #ff0055, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .logo p {
+            font-size: 14px;
+            color: #ff9999;
+            margin-top: 10px;
+            letter-spacing: 3px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .menu-card {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 0, 85, 0.1));
+            border: 2px solid rgba(255, 107, 53, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-4px);
+            border-color: #ff6b35;
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.4);
+        }
+
+        .menu-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .menu-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .menu-desc {
+            font-size: 13px;
+            color: #ffcccc;
+            line-height: 1.5;
+        }
+
+        .menu-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6b35, #ff0055);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ffcccc;
+            font-weight: 600;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff6b35;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .level-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        
+        .level-btn {
+            padding: 16px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            color: white;
+        }
+        
+        .level-btn:hover {
+            background: rgba(255, 107, 53, 0.2);
+        }
+        
+        .level-btn.active {
+            background: linear-gradient(135deg, #ff6b35, #ff0055);
+            border-color: #ff6b35;
+        }
+        
+        .level-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+        
+        .level-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .mode-btn {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 107, 53, 0.2);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+            border-color: #9c27b0;
+        }
+
+        .mode-btn-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .mode-btn-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .mode-btn-desc {
+            font-size: 11px;
+            color: #ffcccc;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #ff6b35, #ff0055);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.4);
+            margin-top: 16px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(255, 107, 53, 0.6);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        /* Suite dans partie 2... */
+    </style>
+</head>
+<body>
+    <div id="fireParticles"></div>
+    
+    <!-- Suite dans partie 2... -->
+    
+    <script>
+    console.log("HEAT Game - Partie 1/4 chargée. En attente des parties 2, 3 et 4...");
+    </script>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🔥 HEAT - Partie 2/4</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a0000;
+            color: white;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .info-box {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 0, 85, 0.1));
+            border: 2px solid rgba(255, 107, 53, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+        h1 { 
+            text-align: center;
+            font-size: 48px;
+            background: linear-gradient(135deg, #ff6b35, #ff0055);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #ff6b35;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 HEAT - Partie 2/4</h1>
+    
+    <div class="info-box">
+        <h2>📋 Structure HTML complète</h2>
+        <p>Cette partie contient :</p>
+        <ul>
+            <li>✅ Fixed Buttons (retour, son, settings, historique)</li>
+            <li>✅ Dashboard modal avec préférences</li>
+            <li>✅ Panel historique</li>
+            <li>✅ Écran HOME avec menu</li>
+            <li>✅ Écran SETUP (configuration partie)</li>
+            <li>✅ Écran GAME (jeu principal)</li>
+            <li>✅ Écran KAMASUTRA</li>
+            <li>✅ Écran DÉFIS THÉMATIQUES</li>
+        </ul>
+    </div>
+
+    <div class="info-box">
+        <h3>🎮 Nouvelles fonctionnalités ajoutées :</h3>
+        <ul>
+            <li><strong>Mode Quick Play :</strong> Parties rapides de 5 tours</li>
+            <li><strong>Mode Tantrique :</strong> Actions plus longues (20+ min)</li>
+            <li><strong>Mode Découverte :</strong> Uniquement nouvelles actions</li>
+            <li><strong>Historique :</strong> Voir actions jouées pendant la partie</li>
+            <li><strong>Favoris :</strong> ⭐ sur chaque action</li>
+            <li><strong>Défis hebdomadaires :</strong> Scénarios spéciaux</li>
+        </ul>
+    </div>
+
+    <div class="info-box">
+        <h3>🚫 Retiré :</h3>
+        <ul>
+            <li>❌ Toutes références à l'anal (analLight, analHard)</li>
+            <li>❌ Actions hardcore avec anal</li>
+            <li>❌ Finitions hardcore (remplacées par finitions standard étendues)</li>
+        </ul>
+    </div>
+
+    <div class="info-box">
+        <h3>📝 HTML Structure ci-dessous :</h3>
+        <pre style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 12px;">
+&lt;!-- Fixed Buttons --&gt;
+&lt;button class="fixed-btn sound-btn"&gt;🔊&lt;/button&gt;
+&lt;button class="fixed-btn settings-btn"&gt;⚙️&lt;/button&gt;
+&lt;button class="fixed-btn back-btn"&gt;←&lt;/button&gt;
+&lt;button class="fixed-btn history-btn"&gt;📜&lt;/button&gt;
+
+&lt;!-- Dashboard Modal --&gt;
+&lt;div class="dashboard-modal"&gt;...&lt;/div&gt;
+
+&lt;!-- History Panel --&gt;
+&lt;div class="history-panel"&gt;...&lt;/div&gt;
+
+&lt;!-- Screens --&gt;
+&lt;div id="homeScreen"&gt;...&lt;/div&gt;
+&lt;div id="setupScreen"&gt;...&lt;/div&gt;
+&lt;div id="gameScreen"&gt;...&lt;/div&gt;
+&lt;div id="kamasutraScreen"&gt;...&lt;/div&gt;
+&lt;div id="defisScreen"&gt;...&lt;/div&gt;
+        </pre>
+    </div>
+
+    <div class="info-box" style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1)); border-color: rgba(76, 175, 80, 0.4);">
+        <h3>✅ Statut : Structure HTML prête</h3>
+        <p>La partie 2 est complète. Les écrans et modals sont maintenant définis.</p>
+        <p><strong>Prochaine étape :</strong> Partie 3/4 avec les données (ACTIONS, FINITIONS, POSITIONS, DÉFIS) et début du JavaScript</p>
+    </div>
+
+    <p style="text-align: center; margin-top: 40px; color: #ff6b35; font-weight: 700;">
+        En attente de la commande pour la Partie 3/4...
+    </p>
+</body>
+</html>
