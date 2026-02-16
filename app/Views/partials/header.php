@@ -112,6 +112,12 @@ if ($currentUser) {
                     </div>
                 </div>
 
+                <!-- Concierge button (authenticated) -->
+                <button class="ccm-nav-btn" onclick="openConciergeModal()" title="Concierge IA" aria-label="Concierge IA">
+                    <span class="ccm-nav-icon">&#x1F9ED;</span>
+                    <span class="ccm-nav-label">Concierge</span>
+                </button>
+
                 <!-- Menu utilisateur — simplifié -->
                 <div class="user-menu" id="userMenu">
                     <button class="user-trigger" onclick="toggleUserMenu(event)" aria-label="Menu utilisateur" aria-expanded="false" aria-haspopup="true">
@@ -153,6 +159,12 @@ if ($currentUser) {
                     </div>
                 </div>
             <?php else: ?>
+                <!-- Concierge button (not authenticated) -->
+                <button class="ccm-nav-btn" onclick="openConciergeModal()" title="Concierge IA" aria-label="Concierge IA">
+                    <span class="ccm-nav-icon">&#x1F9ED;</span>
+                    <span class="ccm-nav-label">Concierge</span>
+                </button>
+
                 <button class="header-login-btn" onclick="openAuthModal()" aria-label="<?= __('nav.login') ?>">
                     <i class="fas fa-user" aria-hidden="true"></i>
                     <span><?= __('nav.login') ?></span>
@@ -162,16 +174,6 @@ if ($currentUser) {
     </div>
 </header>
 
-<!-- CONCIERGE BAR (Fixed bottom assistant) -->
-<?php if (($_SERVER['REQUEST_URI'] ?? '') !== '/concierge'): ?>
-<div class="concierge-bar" id="conciergeBar">
-    <a href="/concierge" class="concierge-bar-inner" aria-label="<?= __('concierge.title') ?>">
-        <div class="concierge-bar-icon"><i class="fas fa-robot"></i></div>
-        <span class="concierge-bar-text"><?= __('concierge.placeholder') ?></span>
-        <div class="concierge-bar-arrow"><i class="fas fa-arrow-right"></i></div>
-    </a>
-</div>
-<?php endif; ?>
 
 <!-- OVERLAY + MODAL AUTH -->
 <div class="auth-overlay" id="authOverlay" onclick="closeAuthModal()" aria-hidden="true"></div>
@@ -477,69 +479,44 @@ if ($currentUser) {
 .dropdown-logout i { color: #dc2626; }
 
 /* ═══════════════════════════════════════════════════════════════════ */
-/* CONCIERGE BAR                                                      */
+/* CONCIERGE NAVBAR BUTTON                                             */
 /* ═══════════════════════════════════════════════════════════════════ */
-.concierge-bar {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 999;
-    width: 90%;
-    max-width: 480px;
-}
-.concierge-bar-inner {
+.ccm-nav-btn {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: white;
-    border: 2px solid #00635a;
-    border-radius: 50px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-    text-decoration: none;
-    color: #374151;
-    transition: all 0.2s;
-    cursor: pointer;
-}
-.concierge-bar-inner:hover {
-    box-shadow: 0 6px 28px rgba(0,99,90,0.2);
-    border-color: #004d40;
-}
-.concierge-bar-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #00635a, #00897b);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-}
-.concierge-bar-text {
-    flex: 1;
-    font-size: 14px;
-    color: #9ca3af;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.concierge-bar-arrow {
-    width: 32px;
-    height: 32px;
-    background: #00635a;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: none;
+    border: 1.5px solid #00635a;
+    border-radius: 20px;
+    color: #00635a;
     font-size: 13px;
-    flex-shrink: 0;
-    transition: background 0.2s;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
-.concierge-bar-inner:hover .concierge-bar-arrow { background: #004d40; }
+.ccm-nav-btn:hover {
+    background: #00635a;
+    color: #fff;
+}
+.ccm-nav-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+.ccm-nav-label {
+    font-size: 13px;
+}
+body.dark-mode .ccm-nav-btn {
+    border-color: #5eead4;
+    color: #5eead4;
+}
+body.dark-mode .ccm-nav-btn:hover {
+    background: #00635a;
+    color: #fff;
+    border-color: #00635a;
+}
 
 /* ═══════════════════════════════════════════════════════════════════ */
 /* RESPONSIVE                                                         */
@@ -550,9 +527,8 @@ if ($currentUser) {
     .logo-svg { width: 30px; height: 30px; }
     .logo-text { font-size: 17px; }
     .loyalty-widget { padding: 5px 8px; font-size: 12px; }
-    .concierge-bar { bottom: 72px; width: 92%; }
-    .concierge-bar-inner { padding: 10px 14px; }
-    .concierge-bar-text { font-size: 13px; }
+    .ccm-nav-label { display: none; }
+    .ccm-nav-btn { padding: 6px 8px; border: none; }
 }
 @media (min-width: 769px) and (max-width: 1024px) {
     .nav-link span { display: none; }

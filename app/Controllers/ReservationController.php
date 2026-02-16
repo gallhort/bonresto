@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Services\NotificationService;
 use App\Services\ActivityFeedService;
+use App\Services\ScoringService;
 use App\Services\RateLimiter;
 use PDO;
 
@@ -143,6 +144,15 @@ class ReservationController extends Controller
             'date' => $date,
             'nb_personnes' => $nbPersonnes,
         ]);
+
+        // Concierge conversion tracking (30-min window)
+        if (!empty($_SESSION['concierge_last_click'])) {
+            $click = $_SESSION['concierge_last_click'];
+            if ((int)$click['restaurant_id'] === $restaurantId && (time() - $click['timestamp']) < 1800) {
+                (new ScoringService($this->db))->trackConversion((int)$click['rec_id'], 'booked');
+                unset($_SESSION['concierge_last_click']);
+            }
+        }
 
         echo json_encode([
             'success' => true,

@@ -8,6 +8,7 @@ use App\Services\Logger;
 use App\Services\NotificationService;
 use App\Services\LoyaltyService;
 use App\Services\ActivityFeedService;
+use App\Services\ScoringService;
 use App\Services\RateLimiter;
 use PDO;
 
@@ -369,6 +370,15 @@ class OrderController extends Controller
             }
 
             $this->db->commit();
+
+            // Concierge conversion tracking (30-min window)
+            if (!empty($_SESSION['concierge_last_click'])) {
+                $click = $_SESSION['concierge_last_click'];
+                if ((int)$click['restaurant_id'] === (int)$restaurant['id'] && (time() - $click['timestamp']) < 1800) {
+                    (new ScoringService($this->db))->trackConversion((int)$click['rec_id'], 'order');
+                    unset($_SESSION['concierge_last_click']);
+                }
+            }
 
             echo json_encode([
                 'success' => true,

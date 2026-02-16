@@ -432,9 +432,14 @@ $router->get('/api/premium/my-subscription', 'PremiumController@mySubscription')
 // F30 - Heures de pointe
 $router->get('/api/restaurants/{id}/peak-hours', 'PeakHoursController@getForRestaurant');
 
-// F32 - AI Concierge
+// F32 - AI Concierge (v2)
 $router->get('/concierge', 'ConciergeController@chat');
 $router->post('/api/concierge/ask', 'ConciergeController@ask');
+$router->post('/api/concierge/click', 'ConciergeController@trackClick');
+$router->post('/api/concierge/dwell', 'ConciergeController@trackDwell');
+$router->get('/api/cron/concierge-recompute', 'ConciergeController@cronRecomputeScores');
+$router->get('/api/cron/analyze-reviews', 'ConciergeController@cronAnalyzeReviews');
+$router->get('/api/cron/fetch-external-data', 'ConciergeController@cronFetchExternalData');
 
 // F31 - Avis vidéo/audio
 $router->post('/api/reviews/{id}/media', 'MediaReviewController@upload');

@@ -42,6 +42,9 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
+    <!-- Concierge Modal CSS -->
+    <link rel="stylesheet" href="<?= asset('css/concierge-modal.css') ?>">
+
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00635a">
@@ -285,6 +288,8 @@ if ('serviceWorker' in navigator) {
 
 <?php include __DIR__ . '/../partials/_compare_widget.php'; ?>
 <?php include __DIR__ . '/../partials/_share_modal.php'; ?>
+<?php include __DIR__ . '/../partials/_concierge_modal.php'; ?>
+<script src="<?= asset('js/concierge-modal.js') ?>"></script>
 
 <script>
 // Footer newsletter

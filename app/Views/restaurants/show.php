@@ -567,7 +567,7 @@ $schemaData = [
     '@type' => 'Restaurant',
     'name' => $restaurant['nom'],
     'description' => $restaurant['description'] ?? '',
-    'image' => $restaurant['main_photo'] ?? '/assets/images/default-restaurant.jpg',
+    'image' => $restaurant['main_photo'] ?? '',
     'address' => [
         '@type' => 'PostalAddress',
         'streetAddress' => $restaurant['adresse'] ?? '',
@@ -3340,6 +3340,33 @@ document.getElementById('reviewSearchInput')?.addEventListener('input', function
 </script>
 
 <?php include __DIR__ . '/../partials/_compare_widget.php'; ?>
+
+<script>
+// ── Concierge Dwell Time Tracking (STORY-016) ──
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    var recId = params.get('rec_id');
+    if (!recId || params.get('ref') !== 'concierge') return;
+    recId = parseInt(recId, 10);
+    if (!recId) return;
+
+    var startTime = Date.now();
+    var sent = false;
+
+    function sendDwell() {
+        if (sent) return;
+        sent = true;
+        var seconds = Math.round((Date.now() - startTime) / 1000);
+        if (seconds < 1) return;
+        navigator.sendBeacon('/api/concierge/dwell', JSON.stringify({ rec_id: recId, seconds: seconds }));
+    }
+
+    window.addEventListener('beforeunload', sendDwell);
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') sendDwell();
+    });
+})();
+</script>
 
 </body>
 </html>

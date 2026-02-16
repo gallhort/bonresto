@@ -678,6 +678,14 @@ try {
     // Feed non critique
 }
 
+// Auto-analyze review for concierge insights (non-critical)
+try {
+    $analyzer = new \App\Services\ReviewAnalyzerService($this->db);
+    $analyzer->analyzeReview($reviewId);
+} catch (\Exception $e) {
+    // Analysis non critique
+}
+
 // Message adapté selon décision IA
 $successMessage = 'Votre avis a été enregistré et sera publié après modération';
 

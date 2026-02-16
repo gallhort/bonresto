@@ -33,6 +33,7 @@ $cuisineImages = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= csrf_token() ?>">
     <title><?= $title ?? 'LeBonResto - Découvrez les meilleurs restaurants d\'Algérie' ?></title>
     <meta name="description" content="Découvrez les meilleurs restaurants d'Algérie. Plus de <?= $totalRestaurants ?? 0 ?> restaurants référencés avec des avis vérifiés.">
 
@@ -40,6 +41,7 @@ $cuisineImages = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?= asset('css/concierge-modal.css') ?>">
 
     <style>
         :root {
@@ -893,10 +895,10 @@ $cuisineImages = [
                 <?php foreach ($region['restaurants'] as $resto): ?>
                     <a href="/restaurant/<?= $resto['id'] ?>" class="resto-card">
                         <div class="resto-card-image">
-                            <img src="<?= htmlspecialchars($resto['main_photo'] ?? '/assets/images/default-restaurant.jpg') ?>"
+                            <img src="<?= htmlspecialchars($resto['main_photo'] ?? 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23e2e8f0%22 width=%22400%22 height=%22300%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2220%22 font-family=%22sans-serif%22>Photo</text></svg>') ?>"
                                  alt="<?= htmlspecialchars($resto['nom']) ?>"
                                  loading="lazy"
-                                 onerror="this.src='/assets/images/default-restaurant.jpg'">
+                                 onerror="this.onerror=null;this.src='data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22&gt;&lt;rect fill=%22%23e2e8f0%22 width=%22400%22 height=%22300%22/%3E&lt;text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2220%22 font-family=%22sans-serif%22&gt;Photo&lt;/text&gt;&lt;/svg&gt;'">
                             <button class="resto-card-wishlist" data-id="<?= $resto['id'] ?>" onclick="event.preventDefault(); toggleWishlist(<?= $resto['id'] ?>)">
                                 <i class="far fa-heart"></i>
                             </button>
@@ -992,9 +994,9 @@ $cuisineImages = [
             <?php foreach (array_slice($latestRestaurants, 0, 4) as $resto): ?>
                 <a href="/restaurant/<?= $resto['id'] ?>" class="resto-card">
                     <div class="resto-card-image">
-                        <img src="<?= htmlspecialchars($resto['main_photo'] ?? '/assets/images/default-restaurant.jpg') ?>"
+                        <img src="<?= htmlspecialchars($resto['main_photo'] ?? 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23e2e8f0%22 width=%22400%22 height=%22300%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2220%22 font-family=%22sans-serif%22>Photo</text></svg>') ?>"
                              alt="<?= htmlspecialchars($resto['nom']) ?>" loading="lazy"
-                             onerror="this.src='/assets/images/default-restaurant.jpg'">
+                             onerror="this.onerror=null;this.src='data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22&gt;&lt;rect fill=%22%23e2e8f0%22 width=%22400%22 height=%22300%22/%3E&lt;text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font-size=%2220%22 font-family=%22sans-serif%22&gt;Photo&lt;/text&gt;&lt;/svg&gt;'">
                         <button class="resto-card-wishlist" data-id="<?= $resto['id'] ?>" onclick="event.preventDefault(); toggleWishlist(<?= $resto['id'] ?>)">
                             <i class="far fa-heart"></i>
                         </button>
@@ -1688,6 +1690,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch (error) {}
 });
 </script>
+
+<?php include __DIR__ . '/../partials/_concierge_modal.php'; ?>
+<script src="<?= asset('js/concierge-modal.js') ?>"></script>
 
 </body>
 </html>
