@@ -587,6 +587,42 @@ class ConciergeController extends Controller
         echo json_encode(array_merge(['success' => true], $result));
     }
 
+    /**
+     * Cron endpoint: data enrichment pipeline
+     * GET /api/cron/enrich-data?token=xxx&source=reviews&limit=200
+     * Sources: reviews, descriptions, horaires, normalize, osm, websites, all
+     */
+    public function cronEnrichData(Request $request): void
+    {
+        header('Content-Type: application/json');
+
+        $token = $request->param('token') ?? ($_GET['token'] ?? '');
+        $expectedToken = getenv('CRON_TOKEN') ?: 'lebonresto-cron-2026';
+        if ($token !== $expectedToken) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Token invalide']);
+            return;
+        }
+
+        $source = trim($_GET['source'] ?? '');
+        $limit = min(500, max(1, (int)($_GET['limit'] ?? 200)));
+
+        $enrichService = new \App\Services\DataEnrichmentService($this->db);
+
+        if ($source === 'stats') {
+            echo json_encode(['success' => true, 'stats' => $enrichService->getStats()]);
+            return;
+        }
+
+        if (empty($source)) {
+            echo json_encode(['success' => false, 'error' => 'Parametre source requis', 'valid_sources' => ['reviews', 'descriptions', 'horaires', 'normalize', 'osm', 'websites', 'all', 'stats']]);
+            return;
+        }
+
+        $result = $enrichService->enrichBySource($source, $limit);
+        echo json_encode(array_merge(['success' => true], $result));
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // INTENT PARSER v3 — AI-powered with NLP fallback
     // ═══════════════════════════════════════════════════════════════

@@ -440,6 +440,7 @@ $router->post('/api/concierge/dwell', 'ConciergeController@trackDwell');
 $router->get('/api/cron/concierge-recompute', 'ConciergeController@cronRecomputeScores');
 $router->get('/api/cron/analyze-reviews', 'ConciergeController@cronAnalyzeReviews');
 $router->get('/api/cron/fetch-external-data', 'ConciergeController@cronFetchExternalData');
+$router->get('/api/cron/enrich-data', 'ConciergeController@cronEnrichData');
 
 // F31 - Avis vidéo/audio
 $router->post('/api/reviews/{id}/media', 'MediaReviewController@upload');

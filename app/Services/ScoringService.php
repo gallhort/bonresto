@@ -651,56 +651,62 @@ class ScoringService
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_rapide ═══
-                // Cuisine fast + pas cher + delivery/takeaway + commande en ligne
+                // Cuisine fast + pas cher + delivery/takeaway + enrichment (service rapide mentions)
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_rapide = LEAST(1.0,
                     CASE
-                        WHEN r.type_cuisine LIKE '%Fast%' OR r.type_cuisine LIKE '%rapide%' THEN 0.28
-                        WHEN r.type_cuisine LIKE '%burger%' OR r.type_cuisine LIKE '%hamburger%' THEN 0.25
-                        WHEN r.type_cuisine LIKE '%pizza%' OR r.type_cuisine LIKE '%kebab%' THEN 0.22
-                        WHEN r.type_cuisine LIKE '%emporter%' THEN 0.22
+                        WHEN r.type_cuisine LIKE '%Fast%' OR r.type_cuisine LIKE '%rapide%' THEN 0.25
+                        WHEN r.type_cuisine LIKE '%burger%' OR r.type_cuisine LIKE '%hamburger%' THEN 0.22
+                        WHEN r.type_cuisine LIKE '%pizza%' OR r.type_cuisine LIKE '%kebab%' THEN 0.18
+                        WHEN r.type_cuisine LIKE '%emporter%' THEN 0.18
                         ELSE 0.03
                     END +
-                    CASE WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) <= 1 THEN 0.18 WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) = 2 THEN 0.12 ELSE 0.03 END +
-                    COALESCE(ro.delivery, 0) * 0.14 +
-                    COALESCE(ro.takeaway, 0) * 0.12 +
-                    CASE WHEN r.orders_enabled = 1 THEN 0.10 ELSE 0.02 END +
+                    CASE WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) <= 1 THEN 0.15 WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) = 2 THEN 0.10 ELSE 0.03 END +
+                    COALESCE(ro.delivery, 0) * 0.10 +
+                    COALESCE(ro.takeaway, 0) * 0.08 +
+                    CASE WHEN r.orders_enabled = 1 THEN 0.08 ELSE 0.02 END +
+                    -- [ENRICHMENT] Review mining: service_rapide mentions
+                    COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.10, red.data_numeric * 0.05), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'service_rapide'), 0) +
+                    -- [ENRICHMENT] Website has delivery (= rapide)
+                    COALESCE((SELECT IF(red.data_value = '1', 0.06, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'website' AND red.data_key = 'website_has_delivery'), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.10
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 3.5 THEN 0.05
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.08
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 3.5 THEN 0.04
                         ELSE 0.02
                     END +
-                    CASE WHEN r.nb_avis >= 10 THEN 0.06 ELSE 0.02 END
+                    CASE WHEN r.nb_avis >= 10 THEN 0.05 ELSE 0.02 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_festif ═══
-                // Terrasse + bonne ambiance + populaire + events
+                // Terrasse + bonne ambiance + populaire + events + enrichment (description festif)
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_festif = LEAST(1.0,
-                    COALESCE(ro.terrace, 0) * 0.18 +
+                    COALESCE(ro.terrace, 0) * 0.14 +
                     -- note_ambiance reelle des reviews
                     COALESCE(
                         CASE
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.5 THEN 0.20
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.0 THEN 0.12
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 3.5 THEN 0.06
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.5 THEN 0.18
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.0 THEN 0.10
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 3.5 THEN 0.05
                             ELSE 0.02
                         END,
                     0.02) +
+                    -- [ENRICHMENT] Description mining: festif signal
+                    COALESCE((SELECT IF(red.data_value LIKE '%festif%', 0.10, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'description_mining' AND red.data_key = 'desc_signals'), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.3 THEN 0.15
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.10
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.3 THEN 0.12
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.08
                         ELSE 0.03
                     END +
-                    CASE WHEN r.nb_avis >= 50 THEN 0.15 WHEN r.nb_avis >= 15 THEN 0.10 WHEN r.nb_avis >= 5 THEN 0.05 ELSE 0.01 END +
-                    CASE WHEN r.events_enabled = 1 THEN 0.12 ELSE 0.02 END +
+                    CASE WHEN r.nb_avis >= 50 THEN 0.12 WHEN r.nb_avis >= 15 THEN 0.08 WHEN r.nb_avis >= 5 THEN 0.04 ELSE 0.01 END +
+                    CASE WHEN r.events_enabled = 1 THEN 0.10 ELSE 0.02 END +
                     CASE
                         WHEN r.type_cuisine LIKE '%Fast%' OR r.type_cuisine LIKE '%rapide%' THEN 0.02
-                        ELSE 0.08
+                        ELSE 0.06
                     END +
-                    CASE WHEN r.popularity_score >= 80 THEN 0.08 WHEN r.popularity_score >= 40 THEN 0.04 ELSE 0.01 END +
+                    CASE WHEN r.popularity_score >= 80 THEN 0.06 WHEN r.popularity_score >= 40 THEN 0.03 ELSE 0.01 END +
                     -- Signal review_insights festif (NLP/Groq enrichi)
                     COALESCE(
                         (SELECT LEAST(0.08, AVG(ri.occasion_festif) * 0.12) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.occasion_festif > 0.3),
@@ -708,51 +714,64 @@ class ScoringService
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_terrasse ═══
-                // Terrasse flag dominant + bonne note + populaire
+                // Terrasse flag + review mining (terrace mentions) + description mining
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_terrasse = LEAST(1.0,
-                    COALESCE(ro.terrace, 0) * 0.45 +
+                    COALESCE(ro.terrace, 0) * 0.35 +
+                    -- [ENRICHMENT] Review mining: terrace_mentioned
+                    COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.12, red.data_numeric * 0.05), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'terrace_mentioned'), 0) +
+                    -- [ENRICHMENT] Description mining: terrasse signal
+                    COALESCE((SELECT IF(red.data_value LIKE '%terrasse%', 0.08, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'description_mining' AND red.data_key = 'desc_signals'), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.18
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 3.5 THEN 0.10
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.14
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 3.5 THEN 0.08
                         ELSE 0.04
                     END +
-                    CASE WHEN r.nb_avis >= 10 THEN 0.12 WHEN r.nb_avis >= 3 THEN 0.06 ELSE 0.02 END +
-                    CASE WHEN r.popularity_score >= 30 THEN 0.10 ELSE 0.03 END +
-                    COALESCE(ro.parking, 0) * 0.08 +
+                    CASE WHEN r.nb_avis >= 10 THEN 0.08 WHEN r.nb_avis >= 3 THEN 0.04 ELSE 0.02 END +
+                    CASE WHEN r.popularity_score >= 30 THEN 0.08 ELSE 0.03 END +
+                    COALESCE(ro.parking, 0) * 0.06 +
                     COALESCE(
                         CASE
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.0 THEN 0.07
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.0 THEN 0.06
                             ELSE 0.02
                         END,
                     0.02)
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_budget ═══
-                // Prix dominant + bonne note + populaire
+                // Prix dominant + review mining prix moyen + bonne note + populaire
                 "UPDATE restaurants r SET r.score_budget = LEAST(1.0,
                     CASE
-                        WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) <= 1 THEN 0.40
-                        WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) = 2 THEN 0.25
-                        WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) = 3 THEN 0.08
+                        WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) <= 1 THEN 0.35
+                        WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) = 2 THEN 0.20
+                        WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) = 3 THEN 0.06
                         ELSE 0.03
                     END +
+                    -- [ENRICHMENT] Review mining: avg_price_mentioned (low price = budget-friendly)
+                    COALESCE((SELECT
+                        CASE
+                            WHEN red.data_numeric > 0 AND red.data_numeric <= 800 THEN 0.12
+                            WHEN red.data_numeric > 0 AND red.data_numeric <= 1500 THEN 0.08
+                            WHEN red.data_numeric > 0 AND red.data_numeric <= 2500 THEN 0.04
+                            ELSE 0.0
+                        END
+                        FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'avg_price_mentioned' AND red.data_numeric > 0), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.2 THEN 0.22
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 3.8 THEN 0.14
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.2 THEN 0.18
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 3.8 THEN 0.12
                         ELSE 0.05
                     END +
                     COALESCE(
                         CASE
-                            WHEN (SELECT AVG(rv.note_prix) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_prix > 0) >= 4.0 THEN 0.12
+                            WHEN (SELECT AVG(rv.note_prix) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_prix > 0) >= 4.0 THEN 0.10
                             WHEN (SELECT AVG(rv.note_prix) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_prix > 0) >= 3.5 THEN 0.06
                             ELSE 0.02
                         END,
                     0.02) +
-                    CASE WHEN r.nb_avis >= 20 THEN 0.10 WHEN r.nb_avis >= 5 THEN 0.06 ELSE 0.02 END +
-                    CASE WHEN r.popularity_score >= 30 THEN 0.08 ELSE 0.02 END +
-                    0.04
+                    CASE WHEN r.nb_avis >= 20 THEN 0.08 WHEN r.nb_avis >= 5 THEN 0.05 ELSE 0.02 END +
+                    CASE WHEN r.popularity_score >= 30 THEN 0.06 ELSE 0.02 END +
+                    0.03
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_gastronomique ═══
@@ -792,9 +811,13 @@ class ScoringService
                                 ELSE 0.01
                             END,
                         0.01) +
-                        COALESCE(ro.private_room, 0) * 0.08 +
-                        COALESCE(ro.valet_service, 0) * 0.06 +
-                        CASE WHEN r.reservations_enabled = 1 THEN 0.06 ELSE 0.01 END +
+                        COALESCE(ro.private_room, 0) * 0.06 +
+                        COALESCE(ro.valet_service, 0) * 0.05 +
+                        CASE WHEN r.reservations_enabled = 1 THEN 0.05 ELSE 0.01 END +
+                        -- [ENRICHMENT] Website has menu (gastronomique = carte en ligne)
+                        COALESCE((SELECT IF(red.data_value = '1', 0.06, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'website' AND red.data_key = 'website_has_menu'), 0) +
+                        -- [ENRICHMENT] Website has reservation
+                        COALESCE((SELECT IF(red.data_value = '1', 0.04, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'website' AND red.data_key = 'website_has_reservation'), 0) +
                         -- Signal review_insights sentiment food (NLP/Groq enrichi)
                         COALESCE(
                             CASE
@@ -811,7 +834,7 @@ class ScoringService
                 // ═══════════════════════════════════════════════════════
 
                 // ═══ score_brunch ═══
-                // Cuisine café/brunch/pâtisserie + horaires matin + review keywords
+                // Cuisine café/brunch/pâtisserie + horaires matin + review keywords + enrichment data
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_brunch = LEAST(1.0,
@@ -827,76 +850,92 @@ class ScoringService
                     LEAST(0.18, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%brunch%' OR ri.keywords LIKE '%petit_dejeuner%' OR ri.keywords LIKE '%ftour%')) * 0.06) +
                     -- Context tags
                     LEAST(0.10, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag IN ('brunch', 'petit-dejeuner', 'breakfast')) * 0.05) +
+                    -- [ENRICHMENT] Horaire analysis: brunch_weekend pattern
+                    COALESCE((SELECT IF(red.data_value = '1', 0.12, 0.0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'horaire_analysis' AND red.data_key = 'brunch_weekend'), 0) +
+                    -- [ENRICHMENT] Horaire analysis: opens_early
+                    COALESCE((SELECT IF(red.data_value = '1', 0.06, 0.0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'horaire_analysis' AND red.data_key = 'opens_early'), 0) +
                     -- Note bayesienne
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.12
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 3.5 THEN 0.06
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.10
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 3.5 THEN 0.05
                         ELSE 0.02
                     END +
-                    CASE WHEN r.nb_avis >= 10 THEN 0.08 WHEN r.nb_avis >= 3 THEN 0.04 ELSE 0.01 END
+                    CASE WHEN r.nb_avis >= 10 THEN 0.06 WHEN r.nb_avis >= 3 THEN 0.03 ELSE 0.01 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_livraison ═══
-                // delivery flag dominant + orders_enabled + review keywords
+                // delivery flag dominant + orders_enabled + review keywords + enrichment
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_livraison = LEAST(1.0,
-                    COALESCE(ro.delivery, 0) * 0.30 +
-                    CASE WHEN r.delivery_enabled = 1 THEN 0.15 ELSE 0.0 END +
-                    CASE WHEN r.orders_enabled = 1 THEN 0.12 ELSE 0.0 END +
-                    COALESCE(ro.takeaway, 0) * 0.08 +
-                    LEAST(0.10, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%livraison%' OR ri.keywords LIKE '%emporter%')) * 0.05) +
+                    COALESCE(ro.delivery, 0) * 0.25 +
+                    CASE WHEN r.delivery_enabled = 1 THEN 0.12 ELSE 0.0 END +
+                    CASE WHEN r.orders_enabled = 1 THEN 0.10 ELSE 0.0 END +
+                    COALESCE(ro.takeaway, 0) * 0.06 +
+                    LEAST(0.08, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%livraison%' OR ri.keywords LIKE '%emporter%')) * 0.04) +
+                    -- [ENRICHMENT] Review mining: service_livraison mentions
+                    COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.10, red.data_numeric * 0.05), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'service_livraison'), 0) +
+                    -- [ENRICHMENT] Description mining: livraison signal
+                    COALESCE((SELECT IF(red.data_value LIKE '%livraison%', 0.08, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'description_mining' AND red.data_key = 'desc_signals'), 0) +
+                    -- [ENRICHMENT] Website has delivery
+                    COALESCE((SELECT IF(red.data_value = '1', 0.08, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'website' AND red.data_key = 'website_has_delivery'), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.12
-                        ELSE 0.04
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.08
+                        ELSE 0.03
                     END +
-                    CASE WHEN r.nb_avis >= 10 THEN 0.06 ELSE 0.02 END +
-                    CASE WHEN r.popularity_score >= 30 THEN 0.05 ELSE 0.01 END
+                    CASE WHEN r.nb_avis >= 10 THEN 0.05 ELSE 0.02 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_vue ═══
-                // Review keywords dominant (vue_mer, vue_panoramique, rooftop) + context_tags + terrasse
+                // Review keywords dominant + context_tags + enrichment (review mining + description mining)
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_vue = LEAST(1.0,
                     -- Review keywords (signal dominant)
-                    LEAST(0.35, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%vue_mer%' OR ri.keywords LIKE '%vue_panoramique%' OR ri.keywords LIKE '%rooftop%')) * 0.08) +
+                    LEAST(0.25, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%vue_mer%' OR ri.keywords LIKE '%vue_panoramique%' OR ri.keywords LIKE '%rooftop%')) * 0.07) +
                     -- Context tags vue
-                    LEAST(0.15, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag IN ('vue', 'vue-mer', 'rooftop', 'panoramique')) * 0.05) +
+                    LEAST(0.12, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag IN ('vue', 'vue-mer', 'rooftop', 'panoramique')) * 0.04) +
                     -- Terrasse (souvent avec vue)
-                    COALESCE(ro.terrace, 0) * 0.10 +
+                    COALESCE(ro.terrace, 0) * 0.08 +
+                    -- [ENRICHMENT] Review mining: vue_mer + vue_panoramique mentions
+                    COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.15, red.data_numeric * 0.08), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'vue_mer'), 0) +
+                    COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.10, red.data_numeric * 0.06), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'vue_panoramique'), 0) +
+                    -- [ENRICHMENT] Description mining: vue signal
+                    COALESCE((SELECT IF(red.data_value LIKE '%vue%', 0.10, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'description_mining' AND red.data_key = 'desc_signals'), 0) +
                     -- note_ambiance (vue = ambiance)
                     COALESCE(
                         CASE
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.5 THEN 0.12
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.0 THEN 0.06
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.5 THEN 0.10
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.0 THEN 0.05
                             ELSE 0.02
                         END,
                     0.02) +
-                    -- Photos count (lieux avec vue = plus de photos)
-                    LEAST(0.08, (SELECT COUNT(*) FROM restaurant_photos rp WHERE rp.restaurant_id = r.id) * 0.02) +
                     -- Note bayesienne
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.2 THEN 0.10
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.2 THEN 0.08
                         ELSE 0.03
                     END +
-                    CASE WHEN r.nb_avis >= 5 THEN 0.06 ELSE 0.01 END
+                    CASE WHEN r.nb_avis >= 5 THEN 0.04 ELSE 0.01 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_healthy ═══
-                // Cuisine végétarien/vegan/sushi + review keywords + description
+                // Cuisine végétarien/vegan/sushi + review keywords + description mining
                 "UPDATE restaurants r
                 SET r.score_healthy = LEAST(1.0,
                     CASE
-                        WHEN r.type_cuisine LIKE '%v%g%tarien%' OR r.type_cuisine LIKE '%vegan%' THEN 0.30
-                        WHEN r.type_cuisine LIKE '%sushi%' OR r.type_cuisine LIKE '%japon%' THEN 0.18
-                        WHEN r.type_cuisine LIKE '%salade%' OR r.type_cuisine LIKE '%bio%' THEN 0.22
-                        WHEN r.type_cuisine LIKE '%m%diterran%' THEN 0.10
+                        WHEN r.type_cuisine LIKE '%v%g%tarien%' OR r.type_cuisine LIKE '%vegan%' THEN 0.28
+                        WHEN r.type_cuisine LIKE '%sushi%' OR r.type_cuisine LIKE '%japon%' THEN 0.16
+                        WHEN r.type_cuisine LIKE '%salade%' OR r.type_cuisine LIKE '%bio%' THEN 0.20
+                        WHEN r.type_cuisine LIKE '%m%diterran%' THEN 0.08
                         ELSE 0.03
                     END +
-                    LEAST(0.20, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%healthy%' OR ri.keywords LIKE '%salade%' OR ri.keywords LIKE '%vegetarien%')) * 0.06) +
-                    LEAST(0.10, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag IN ('healthy', 'bio', 'vegetarien', 'salade')) * 0.05) +
-                    CASE WHEN r.description LIKE '%healthy%' OR r.description LIKE '%bio%' OR r.description LIKE '%salade%' OR r.description LIKE '%diet%' THEN 0.08 ELSE 0.0 END +
+                    LEAST(0.15, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%healthy%' OR ri.keywords LIKE '%salade%' OR ri.keywords LIKE '%vegetarien%')) * 0.05) +
+                    LEAST(0.08, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag IN ('healthy', 'bio', 'vegetarien', 'salade')) * 0.04) +
+                    CASE WHEN r.description LIKE '%healthy%' OR r.description LIKE '%bio%' OR r.description LIKE '%salade%' OR r.description LIKE '%diet%' THEN 0.06 ELSE 0.0 END +
+                    -- [ENRICHMENT] Description mining: healthy signal
+                    COALESCE((SELECT IF(red.data_value LIKE '%healthy%' OR red.data_value LIKE '%salade%', 0.08, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'description_mining' AND red.data_key = 'desc_signals'), 0) +
+                    -- [ENRICHMENT] Review mining: popular dishes (salade = healthy)
+                    COALESCE((SELECT IF(red.data_value LIKE '%salade%', 0.06, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'popular_dishes'), 0) +
                     CASE
                         WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.12
                         ELSE 0.04
@@ -912,95 +951,108 @@ class ScoringService
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_ouvert_tard ═══
-                // Horaires fermeture_soir >= 23:00 dominant + cuisine fast-food + review keywords
+                // Horaires dominant + enrichment (late_night, after_midnight patterns)
                 "UPDATE restaurants r
                 SET r.score_ouvert_tard = LEAST(1.0,
                     -- Horaires fermeture tard (signal dominant)
                     COALESCE((SELECT
                         CASE
-                            WHEN MAX(h.fermeture_soir) >= '00:00:00' AND MAX(h.fermeture_soir) <= '05:00:00' THEN 0.40
-                            WHEN MAX(h.fermeture_soir) >= '23:00:00' THEN 0.35
-                            WHEN MAX(h.fermeture_soir) >= '22:00:00' THEN 0.15
+                            WHEN MAX(h.fermeture_soir) >= '00:00:00' AND MAX(h.fermeture_soir) <= '05:00:00' THEN 0.30
+                            WHEN MAX(h.fermeture_soir) >= '23:00:00' THEN 0.25
+                            WHEN MAX(h.fermeture_soir) >= '22:00:00' THEN 0.12
                             ELSE 0.03
                         END
                         FROM restaurant_horaires h WHERE h.restaurant_id = r.id AND h.ferme = 0 AND h.fermeture_soir IS NOT NULL), 0.0) +
                     -- Cuisine fast-food (souvent tard)
                     CASE
-                        WHEN r.type_cuisine LIKE '%Fast%' OR r.type_cuisine LIKE '%rapide%' OR r.type_cuisine LIKE '%burger%' OR r.type_cuisine LIKE '%pizza%' OR r.type_cuisine LIKE '%kebab%' THEN 0.12
+                        WHEN r.type_cuisine LIKE '%Fast%' OR r.type_cuisine LIKE '%rapide%' OR r.type_cuisine LIKE '%burger%' OR r.type_cuisine LIKE '%pizza%' OR r.type_cuisine LIKE '%kebab%' THEN 0.10
                         ELSE 0.03
                     END +
-                    LEAST(0.10, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.keywords LIKE '%tard%') * 0.05) +
-                    -- Service continu = plus flexible
-                    COALESCE((SELECT IF(SUM(h2.service_continu) > 0, 0.08, 0.02) FROM restaurant_horaires h2 WHERE h2.restaurant_id = r.id AND h2.ferme = 0), 0.01) +
+                    LEAST(0.08, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.keywords LIKE '%tard%') * 0.04) +
+                    -- [ENRICHMENT] Horaire analysis: late_night pattern
+                    COALESCE((SELECT IF(red.data_value = '1', 0.12, 0.0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'horaire_analysis' AND red.data_key = 'late_night'), 0) +
+                    -- [ENRICHMENT] Horaire analysis: after_midnight pattern
+                    COALESCE((SELECT IF(red.data_value = '1', 0.10, 0.0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'horaire_analysis' AND red.data_key = 'after_midnight'), 0) +
+                    -- [ENRICHMENT] Horaire analysis: service_continu
+                    COALESCE((SELECT IF(red.data_value = '1', 0.06, 0.0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'horaire_analysis' AND red.data_key = 'service_continu'), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.10
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.08
                         ELSE 0.03
                     END +
-                    CASE WHEN r.nb_avis >= 5 THEN 0.06 ELSE 0.02 END +
-                    CASE WHEN r.popularity_score >= 30 THEN 0.06 ELSE 0.02 END
+                    CASE WHEN r.nb_avis >= 5 THEN 0.05 ELSE 0.02 END +
+                    CASE WHEN r.popularity_score >= 30 THEN 0.04 ELSE 0.01 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_instagrammable ═══
-                // Photos + review keywords (belle_deco) + note_ambiance + prix
+                // Photos + review mining (belle_deco) + note_ambiance + website/instagram presence
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_instagrammable = LEAST(1.0,
                     -- Photos count
-                    LEAST(0.15, (SELECT COUNT(*) FROM restaurant_photos rp WHERE rp.restaurant_id = r.id) * 0.03) +
+                    LEAST(0.12, (SELECT COUNT(*) FROM restaurant_photos rp WHERE rp.restaurant_id = r.id) * 0.03) +
                     -- Review keywords deco/photogenique
-                    LEAST(0.20, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%belle_deco%' OR ri.keywords LIKE '%cadre agr%')) * 0.05) +
+                    LEAST(0.15, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%belle_deco%' OR ri.keywords LIKE '%cadre agr%')) * 0.05) +
+                    -- [ENRICHMENT] Review mining: belle_deco mentions
+                    COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.12, red.data_numeric * 0.06), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'ambiance_belle_deco'), 0) +
                     -- note_ambiance elevee
                     COALESCE(
                         CASE
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.5 THEN 0.20
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.0 THEN 0.12
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 3.5 THEN 0.06
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.5 THEN 0.15
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.0 THEN 0.10
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 3.5 THEN 0.05
                             ELSE 0.02
                         END,
                     0.02) +
                     -- Prix haut = souvent joli cadre
-                    CASE WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) >= 3 THEN 0.10 WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) = 2 THEN 0.04 ELSE 0.0 END +
-                    COALESCE(ro.terrace, 0) * 0.08 +
-                    -- Website = soin de l'image
-                    CASE WHEN r.website IS NOT NULL AND r.website != '' THEN 0.05 ELSE 0.0 END +
+                    CASE WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) >= 3 THEN 0.08 WHEN CHAR_LENGTH(COALESCE(r.price_range,'')) = 2 THEN 0.04 ELSE 0.0 END +
+                    COALESCE(ro.terrace, 0) * 0.06 +
+                    -- [ENRICHMENT] Website active + Instagram presence
+                    COALESCE((SELECT IF(red.data_value = '1', 0.05, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'website' AND red.data_key = 'website_active'), 0) +
+                    COALESCE((SELECT IF(red.data_value IS NOT NULL AND red.data_value != '', 0.08, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'website' AND red.data_key = 'website_instagram'), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.2 THEN 0.10
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.2 THEN 0.08
                         ELSE 0.03
                     END +
-                    CASE WHEN r.nb_avis >= 10 THEN 0.06 ELSE 0.02 END
+                    CASE WHEN r.nb_avis >= 10 THEN 0.05 ELSE 0.02 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_calme ═══
-                // Review keywords (calme, cosy) - bruyant + context_tags + cuisine café/gastro
+                // Review keywords + review mining (calme/bruyant) + description mining + context_tags
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_calme = LEAST(1.0,
                     -- Review keywords calme/cosy positif
-                    LEAST(0.25, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%calme%' OR ri.keywords LIKE '%cosy%' OR ri.keywords LIKE '%intime%')) * 0.06) +
+                    LEAST(0.18, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%calme%' OR ri.keywords LIKE '%cosy%' OR ri.keywords LIKE '%intime%')) * 0.05) +
                     -- Review keywords bruyant negatif
                     - LEAST(0.15, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.keywords LIKE '%bruyant%') * 0.08) +
+                    -- [ENRICHMENT] Review mining: calme count
+                    COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.15, red.data_numeric * 0.06), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'ambiance_calme'), 0) +
+                    -- [ENRICHMENT] Review mining: bruyant (penalty)
+                    - COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.12, red.data_numeric * 0.06), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'ambiance_bruyant'), 0) +
+                    -- [ENRICHMENT] Description mining: calme signal
+                    COALESCE((SELECT IF(red.data_value LIKE '%calme%' OR red.data_value LIKE '%cosy%', 0.08, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'description_mining' AND red.data_key = 'desc_signals'), 0) +
                     -- Context tags calme
-                    LEAST(0.12, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag IN ('calme', 'cosy', 'intime', 'paisible')) * 0.04) +
+                    LEAST(0.10, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag IN ('calme', 'cosy', 'intime', 'paisible')) * 0.04) +
                     -- Cuisine calme (café, gastro, salon de thé)
                     CASE
-                        WHEN r.type_cuisine LIKE '%caf%' OR r.type_cuisine LIKE '%salon%th%' THEN 0.12
-                        WHEN r.type_cuisine LIKE '%gastro%' OR r.type_cuisine LIKE '%fran%' THEN 0.10
+                        WHEN r.type_cuisine LIKE '%caf%' OR r.type_cuisine LIKE '%salon%th%' THEN 0.10
+                        WHEN r.type_cuisine LIKE '%gastro%' OR r.type_cuisine LIKE '%fran%' THEN 0.08
                         ELSE 0.03
                     END +
-                    COALESCE(ro.private_room, 0) * 0.08 +
-                    COALESCE(ro.air_conditioning, 0) * 0.04 +
+                    COALESCE(ro.private_room, 0) * 0.06 +
+                    COALESCE(ro.air_conditioning, 0) * 0.03 +
                     -- note_ambiance elevee
                     COALESCE(
                         CASE
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.3 THEN 0.12
-                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 3.8 THEN 0.06
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 4.3 THEN 0.10
+                            WHEN (SELECT AVG(rv.note_ambiance) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.status = 'approved' AND rv.note_ambiance > 0) >= 3.8 THEN 0.05
                             ELSE 0.02
                         END,
                     0.02) +
-                    CASE WHEN r.nb_avis >= 5 THEN 0.05 ELSE 0.01 END +
+                    CASE WHEN r.nb_avis >= 5 THEN 0.04 ELSE 0.01 END +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.08
-                        ELSE 0.03
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.06
+                        ELSE 0.02
                     END
                 ) WHERE r.status = 'validated'",
 
@@ -1030,86 +1082,100 @@ class ScoringService
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_parking ═══
-                // restaurant_options.parking dominant + valet + review keywords
+                // parking flag dominant + valet + review mining parking mentions
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_parking = LEAST(1.0,
-                    COALESCE(ro.parking, 0) * 0.40 +
-                    COALESCE(ro.valet_service, 0) * 0.15 +
-                    LEAST(0.12, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.keywords LIKE '%parking%') * 0.04) +
-                    LEAST(0.08, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag = 'parking') * 0.04) +
+                    COALESCE(ro.parking, 0) * 0.35 +
+                    COALESCE(ro.valet_service, 0) * 0.12 +
+                    LEAST(0.10, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.keywords LIKE '%parking%') * 0.04) +
+                    LEAST(0.06, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag = 'parking') * 0.03) +
+                    -- [ENRICHMENT] Review mining: parking mentions
+                    COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.12, red.data_numeric * 0.06), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'parking_mentioned'), 0) +
+                    -- [ENRICHMENT] Description mining: parking signal
+                    COALESCE((SELECT IF(red.data_value LIKE '%parking%', 0.06, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'description_mining' AND red.data_key = 'desc_signals'), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.10
-                        ELSE 0.04
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.08
+                        ELSE 0.03
                     END +
-                    CASE WHEN r.nb_avis >= 5 THEN 0.06 ELSE 0.02 END +
-                    CASE WHEN r.popularity_score >= 20 THEN 0.05 ELSE 0.01 END
+                    CASE WHEN r.nb_avis >= 5 THEN 0.05 ELSE 0.02 END +
+                    CASE WHEN r.popularity_score >= 20 THEN 0.04 ELSE 0.01 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_ramadan ═══
-                // Review keywords (ramadan, ftour, shour) + cuisine traditionnelle + horaires soir
+                // Review keywords + description mining + cuisine traditionnelle + horaires soir
                 "UPDATE restaurants r
                 SET r.score_ramadan = LEAST(1.0,
-                    LEAST(0.25, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%ramadan%' OR ri.keywords LIKE '%ftour%')) * 0.06) +
-                    LEAST(0.10, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag IN ('ramadan', 'ftour', 'iftar')) * 0.05) +
+                    LEAST(0.20, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%ramadan%' OR ri.keywords LIKE '%ftour%')) * 0.06) +
+                    LEAST(0.08, (SELECT COALESCE(SUM(ct.vote_count), 0) FROM restaurant_context_tags ct WHERE ct.restaurant_id = r.id AND ct.tag IN ('ramadan', 'ftour', 'iftar')) * 0.04) +
                     -- Cuisine traditionnelle (ftour = cuisine algerienne)
                     CASE
-                        WHEN r.type_cuisine LIKE '%tradition%' OR r.type_cuisine LIKE '%lg%rien%' OR r.type_cuisine LIKE '%classique%' THEN 0.18
-                        WHEN r.type_cuisine LIKE '%orient%' OR r.type_cuisine LIKE '%Grill%' THEN 0.10
+                        WHEN r.type_cuisine LIKE '%tradition%' OR r.type_cuisine LIKE '%lg%rien%' OR r.type_cuisine LIKE '%classique%' THEN 0.15
+                        WHEN r.type_cuisine LIKE '%orient%' OR r.type_cuisine LIKE '%Grill%' THEN 0.08
                         ELSE 0.03
                     END +
                     -- Description mentionne ramadan/ftour
-                    CASE WHEN r.description LIKE '%ramadan%' OR r.description LIKE '%ftour%' OR r.description LIKE '%iftar%' THEN 0.10 ELSE 0.0 END +
+                    CASE WHEN r.description LIKE '%ramadan%' OR r.description LIKE '%ftour%' OR r.description LIKE '%iftar%' THEN 0.08 ELSE 0.0 END +
+                    -- [ENRICHMENT] Description mining: traditionnel/ramadan signal
+                    COALESCE((SELECT IF(red.data_value LIKE '%traditionnel%' OR red.data_value LIKE '%ramadan%', 0.08, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'description_mining' AND red.data_key = 'desc_signals'), 0) +
+                    -- [ENRICHMENT] Horaire analysis: late_night (open soir = ftour)
+                    COALESCE((SELECT IF(red.data_value = '1', 0.06, 0.0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'horaire_analysis' AND red.data_key = 'late_night'), 0) +
                     -- Horaires soir (ftour = soir)
-                    COALESCE((SELECT IF(MAX(h.fermeture_soir) >= '21:00:00', 0.08, 0.02) FROM restaurant_horaires h WHERE h.restaurant_id = r.id AND h.ferme = 0), 0.01) +
+                    COALESCE((SELECT IF(MAX(h.fermeture_soir) >= '21:00:00', 0.06, 0.02) FROM restaurant_horaires h WHERE h.restaurant_id = r.id AND h.ferme = 0), 0.01) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.10
-                        ELSE 0.04
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.08
+                        ELSE 0.03
                     END +
-                    CASE WHEN r.nb_avis >= 5 THEN 0.06 ELSE 0.02 END +
-                    CASE WHEN r.popularity_score >= 20 THEN 0.05 ELSE 0.01 END
+                    CASE WHEN r.nb_avis >= 5 THEN 0.05 ELSE 0.02 END +
+                    CASE WHEN r.popularity_score >= 20 THEN 0.04 ELSE 0.01 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_groupe ═══
-                // private_room + review keywords (grand_groupe, salle_privee) + events + parking
+                // private_room + review keywords + events + website reservation + parking
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_groupe = LEAST(1.0,
-                    COALESCE(ro.private_room, 0) * 0.25 +
-                    LEAST(0.15, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%grand_groupe%' OR ri.keywords LIKE '%salle_privee%')) * 0.06) +
-                    CASE WHEN r.events_enabled = 1 THEN 0.12 ELSE 0.02 END +
-                    CASE WHEN r.reservations_enabled = 1 THEN 0.08 ELSE 0.01 END +
-                    COALESCE(ro.parking, 0) * 0.08 +
+                    COALESCE(ro.private_room, 0) * 0.22 +
+                    LEAST(0.12, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%grand_groupe%' OR ri.keywords LIKE '%salle_privee%')) * 0.05) +
+                    CASE WHEN r.events_enabled = 1 THEN 0.10 ELSE 0.02 END +
+                    CASE WHEN r.reservations_enabled = 1 THEN 0.06 ELSE 0.01 END +
+                    COALESCE(ro.parking, 0) * 0.06 +
                     -- trip_type Entre amis (grands groupes)
-                    LEAST(0.10, (SELECT COUNT(*) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.trip_type = 'Entre amis' AND rv.status = 'approved') * 0.04) +
+                    LEAST(0.08, (SELECT COUNT(*) FROM reviews rv WHERE rv.restaurant_id = r.id AND rv.trip_type = 'Entre amis' AND rv.status = 'approved') * 0.04) +
+                    -- [ENRICHMENT] Website has reservation
+                    COALESCE((SELECT IF(red.data_value = '1', 0.08, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'website' AND red.data_key = 'website_has_reservation'), 0) +
+                    -- [ENRICHMENT] Horaire analysis: open_7_days (plus flexible pour groupes)
+                    COALESCE((SELECT IF(red.data_value = '1', 0.05, 0.0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'horaire_analysis' AND red.data_key = 'open_7_days'), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.10
-                        ELSE 0.04
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.08
+                        ELSE 0.03
                     END +
-                    CASE WHEN r.nb_avis >= 10 THEN 0.06 ELSE 0.02 END
+                    CASE WHEN r.nb_avis >= 10 THEN 0.05 ELSE 0.02 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_wifi_travail ═══
-                // wifi flag ultra-fort (6 restos) + cuisine café + review keywords
+                // wifi flag + café + review mining (wifi, calme) + horaire service_continu
                 "UPDATE restaurants r
                 LEFT JOIN restaurant_options ro ON ro.restaurant_id = r.id
                 SET r.score_wifi_travail = LEAST(1.0,
-                    COALESCE(ro.wifi, 0) * 0.40 +
+                    COALESCE(ro.wifi, 0) * 0.30 +
                     CASE
-                        WHEN r.type_cuisine LIKE '%caf%' OR r.type_cuisine LIKE '%coffee%' THEN 0.15
-                        WHEN r.type_cuisine LIKE '%salon%th%' THEN 0.12
+                        WHEN r.type_cuisine LIKE '%caf%' OR r.type_cuisine LIKE '%coffee%' THEN 0.12
+                        WHEN r.type_cuisine LIKE '%salon%th%' THEN 0.10
                         ELSE 0.03
                     END +
-                    LEAST(0.10, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%wifi%' OR ri.keywords LIKE '%travailler%')) * 0.05) +
-                    -- Service continu = rester longtemps
-                    COALESCE((SELECT IF(SUM(h.service_continu) > 0, 0.08, 0.02) FROM restaurant_horaires h WHERE h.restaurant_id = r.id AND h.ferme = 0), 0.01) +
+                    LEAST(0.08, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%wifi%' OR ri.keywords LIKE '%travailler%')) * 0.04) +
+                    -- [ENRICHMENT] Review mining: wifi mentions
+                    COALESCE((SELECT IF(red.data_numeric > 0, 0.15, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'wifi_mentioned'), 0) +
+                    -- [ENRICHMENT] Review mining: calme (bon pour travailler)
+                    COALESCE((SELECT IF(red.data_numeric > 0, LEAST(0.08, red.data_numeric * 0.04), 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'ambiance_calme'), 0) +
+                    -- [ENRICHMENT] Horaire analysis: service_continu (rester longtemps)
+                    COALESCE((SELECT IF(red.data_value = '1', 0.08, 0.0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'horaire_analysis' AND red.data_key = 'service_continu'), 0) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.10
-                        ELSE 0.04
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.08
+                        ELSE 0.03
                     END +
-                    CASE WHEN r.nb_avis >= 3 THEN 0.06 ELSE 0.02 END +
-                    -- Calme = bon pour travailler
-                    LEAST(0.06, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%calme%' OR ri.keywords LIKE '%cosy%')) * 0.03)
+                    CASE WHEN r.nb_avis >= 3 THEN 0.04 ELSE 0.01 END
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_enfants ═══
@@ -1138,31 +1204,35 @@ class ScoringService
                 ) WHERE r.status = 'validated'",
 
                 // ═══ score_traditionnel ═══
-                // type_cuisine dominant (traditionnel/algérien) + review keywords + description
+                // type_cuisine dominant + review keywords + description mining + popular dishes
                 "UPDATE restaurants r
                 SET r.score_traditionnel = LEAST(1.0,
                     CASE
-                        WHEN r.type_cuisine LIKE '%tradition%' OR r.type_cuisine LIKE '%lg%rien%' THEN 0.30
-                        WHEN r.type_cuisine LIKE '%classique%' OR r.type_cuisine LIKE '%kabyle%' THEN 0.25
-                        WHEN r.type_cuisine LIKE '%Grill%' OR r.type_cuisine LIKE '%chawarma%' OR r.type_cuisine LIKE '%orient%' THEN 0.12
+                        WHEN r.type_cuisine LIKE '%tradition%' OR r.type_cuisine LIKE '%lg%rien%' THEN 0.25
+                        WHEN r.type_cuisine LIKE '%classique%' OR r.type_cuisine LIKE '%kabyle%' THEN 0.20
+                        WHEN r.type_cuisine LIKE '%Grill%' OR r.type_cuisine LIKE '%chawarma%' OR r.type_cuisine LIKE '%orient%' THEN 0.10
                         ELSE 0.02
                     END +
-                    LEAST(0.18, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%traditionnel%' OR ri.keywords LIKE '%plat_algerien%' OR ri.keywords LIKE '%fait maison%')) * 0.05) +
-                    CASE WHEN r.description LIKE '%tradition%' OR r.description LIKE '%authentique%' OR r.description LIKE '%fait maison%' OR r.description LIKE '%familial%' THEN 0.08 ELSE 0.0 END +
+                    LEAST(0.15, (SELECT COUNT(*) FROM review_insights ri WHERE ri.restaurant_id = r.id AND (ri.keywords LIKE '%traditionnel%' OR ri.keywords LIKE '%plat_algerien%' OR ri.keywords LIKE '%fait maison%')) * 0.05) +
+                    CASE WHEN r.description LIKE '%tradition%' OR r.description LIKE '%authentique%' OR r.description LIKE '%fait maison%' OR r.description LIKE '%familial%' THEN 0.06 ELSE 0.0 END +
+                    -- [ENRICHMENT] Description mining: traditionnel signal
+                    COALESCE((SELECT IF(red.data_value LIKE '%traditionnel%', 0.10, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'description_mining' AND red.data_key = 'desc_signals'), 0) +
+                    -- [ENRICHMENT] Review mining: popular dishes (couscous, chorba, tajine = traditionnel)
+                    COALESCE((SELECT IF(red.data_value LIKE '%couscous%' OR red.data_value LIKE '%chorba%' OR red.data_value LIKE '%tajine%' OR red.data_value LIKE '%rechta%', 0.10, 0) FROM restaurant_external_data red WHERE red.restaurant_id = r.id AND red.source = 'review_mining' AND red.data_key = 'popular_dishes'), 0) +
                     -- note_nourriture elevee
                     COALESCE(
                         CASE
-                            WHEN (SELECT AVG(ri.sentiment_food) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.sentiment_food IS NOT NULL) >= 4.5 THEN 0.10
-                            WHEN (SELECT AVG(ri.sentiment_food) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.sentiment_food IS NOT NULL) >= 4.0 THEN 0.05
+                            WHEN (SELECT AVG(ri.sentiment_food) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.sentiment_food IS NOT NULL) >= 4.5 THEN 0.08
+                            WHEN (SELECT AVG(ri.sentiment_food) FROM review_insights ri WHERE ri.restaurant_id = r.id AND ri.sentiment_food IS NOT NULL) >= 4.0 THEN 0.04
                             ELSE 0.01
                         END,
                     0.01) +
                     CASE
-                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.12
+                        WHEN (r.nb_avis * r.note_moyenne + {$M} * {$C}) / (r.nb_avis + {$M}) >= 4.0 THEN 0.10
                         ELSE 0.04
                     END +
-                    CASE WHEN r.nb_avis >= 10 THEN 0.08 WHEN r.nb_avis >= 3 THEN 0.04 ELSE 0.01 END +
-                    CASE WHEN r.popularity_score >= 30 THEN 0.06 ELSE 0.02 END
+                    CASE WHEN r.nb_avis >= 10 THEN 0.06 WHEN r.nb_avis >= 3 THEN 0.03 ELSE 0.01 END +
+                    CASE WHEN r.popularity_score >= 30 THEN 0.04 ELSE 0.02 END
                 ) WHERE r.status = 'validated'",
             ];
 
